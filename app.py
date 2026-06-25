@@ -65,18 +65,22 @@ def login():
         return render_template('login.html', erro="Credenciais incorretas.")
     return render_template('login.html', erro=None)
 
-@app.route('/admin')
-def admin():
+@app.route('/rat_avulsa')
+def rat_avulsa():
     if not session.get('logado'):
         return redirect(url_for('login'))
     
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM chamados WHERE status != 'Finalizado' ORDER BY id DESC")
-    chamados = cur.fetchall()
-    cur.close()
-    conn.close()
-    return render_template('admin.html', chamados=chamados, tecnico_atual=session.get('usuario'))
+    # Criamos um "chamado fictício" para que o template 'rat.html' 
+    # não dê erro ao tentar exibir os campos
+    chamado_ficticio = {
+        "id": 0, 
+        "codigo_os": gerar_codigo_os(),
+        "cliente": "Atendimento Avulso",
+        "empresa": "JRV-TI",
+        "whatsapp": "",
+        "descricao": "Atendimento Técnico sem O.S. vinculada"
+    }
+    return render_template('rat.html', chamado=chamado_ficticio)
 
 @app.route('/arquivados')
 def arquivados():
