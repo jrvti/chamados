@@ -8,13 +8,15 @@ from flask import Flask, render_template, request, send_file, redirect, url_for,
 app = Flask(__name__)
 app.secret_key = 'chave_secreta_jrvti_2026'
 
-# O Render injeta a URL do banco de dados aqui
 DATABASE_URL = os.environ.get('DATABASE_URL')
 PDF_FOLDER = 'RATs_Gerados'
 MODELO_PDF = 'modelo_rat.pdf'
 
 USUARIOS_PERMITIDOS = ['tecsenior', 'tecnicon2', 'tecnicon1']
 PASSWORD_ADMIN = 'S@cCham@d##s2005'
+
+if not os.path.exists(PDF_FOLDER):
+    os.makedirs(PDF_FOLDER)
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
@@ -40,7 +42,6 @@ def init_db():
     cur.close()
     conn.close()
 
-# Executa ao iniciar
 init_db()
 
 def gerar_codigo_os():
@@ -56,60 +57,57 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        usuario = request.form.get('usuario')
-        senha = request.form.get('senha')
-        if usuario in USUARIOS_PERMITIDOS and senha == PASSWORD_ADMIN:
+        if request.form.get('usuario') in USUARIOS_PERMITIDOS and request.form.get('senha') == PASSWORD_ADMIN:
             session['logado'] = True
-            session['usuario'] = usuario
+            session['usuario'] = request.form.get('usuario')
             return redirect(url_for('admin'))
         return render_template('login.html', erro="Credenciais incorretas.")
     return render_template('login.html', erro=None)
 
-@app.route('/rat_avulsa')
-def rat_avulsa():
-    if not session.get('logado'):
-        return redirect(url_for('login'))
-    
-    # Criamos um "chamado fictício" para que o template 'rat.html' 
-    # não dê erro ao tentar exibir os campos
-    chamado_ficticio = {
-        "id": 0, 
-        "codigo_os": gerar_codigo_os(),
-        "cliente": "Atendimento Avulso",
-        "empresa": "JRV-TI",
-        "whatsapp": "",
-        "descricao": "Atendimento Técnico sem O.S. vinculada"
-    }
-    return render_template('rat.html', chamado=chamado_ficticio)
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
-@app.route('/arquivados')
-def arquivados():
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
     if not session.get('logado'): return redirect(url_for('login'))
-    
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM chamados WHERE status = 'Finalizado' ORDER BY id DESC")
+    
+    if request.method == 'POST':
+        cur.execute("UPDATE chamados SET status = %s, tecnico_responsavel = %s, urgencia = %s WHERE id = %s", 
+                    (request.form.get('status'), request.form.get('tecnico_responsavel'), request.form.get('urgencia'), request.form.get('id')))
+        conn.commit()
+    
+    busca = request.args.get('busca', '')
+    query = "SELECT * FROM chamados WHERE status != 'Finalizado'"
+    if busca:
+        query += f" AND (codigo_os ILIKE '%{busca}%' OR cliente ILIKE '%{busca}%')"
+    cur.execute(query + " ORDER BY id DESC")
     chamados = cur.fetchall()
     cur.close()
     conn.close()
-    return render_template('arquivados.html', chamados=chamados)
+    return render_template('admin.html', chamados=chamados, tecnico_atual=session.get('usuario'), busca=busca)
+
+@app.route('/rat_avulsa')
+def rat_avulsa():
+    if not session.get('logado'): return redirect(url_for('login'))
+    return render_template('rat.html', chamado={"id": 0, "codigo_os": gerar_codigo_os(), "cliente": "", "empresa": "", "whatsapp": "", "descricao": ""})
 
 @app.route('/dashboard')
 def dashboard():
     if not session.get('logado'): return redirect(url_for('login'))
-    
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT COUNT(*) as qtd, status FROM chamados GROUP BY status")
+    cur.execute("SELECT status, COUNT(*) as qtd FROM chamados GROUP BY status")
     stats = cur.fetchall()
     cur.close()
     conn.close()
     return render_template('dashboard.html', stats=stats)
 
-# Nota: As rotas de finalizar, excluir e rat devem seguir o mesmo padrão:
-# 1. Abrir conexão com get_db_connection()
-# 2. Usar cursor(cursor_factory=RealDictCursor)
-# 3. Fechar cursor e conexão sempre.
+# Adicione as rotas /arquivados, /detalhes, /finalizar e /excluir seguindo o padrão de 
+# abrir/fechar conexão com get_db_connection() e usar RealDictCursor.
 
 if __name__ == '__main__':
     app.run()
