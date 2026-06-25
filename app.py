@@ -3,46 +3,16 @@ import random
 import string
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Flask, render_template, request, send_file, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, send_file, redirect, url_for, session
 
 app = Flask(__name__)
 app.secret_key = 'chave_secreta_jrvti_2026'
 
+# O Render fornece esta variável automaticamente
 DATABASE_URL = os.environ.get('DATABASE_URL')
-PDF_FOLDER = 'RATs_Gerados'
-MODELO_PDF = 'modelo_rat.pdf'
-
-USUARIOS_PERMITIDOS = ['tecsenior', 'tecnicon2', 'tecnicon1']
-PASSWORD_ADMIN = 'S@cCham@d##s2005'
-
-if not os.path.exists(PDF_FOLDER):
-    os.makedirs(PDF_FOLDER)
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
-
-def init_db():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS chamados (
-            id SERIAL PRIMARY KEY,
-            codigo_os TEXT,
-            cliente TEXT,
-            empresa TEXT,
-            whatsapp TEXT,
-            descricao TEXT,
-            status TEXT DEFAULT 'Aberto',
-            tecnico_responsavel TEXT DEFAULT 'Nenhum',
-            urgencia TEXT DEFAULT 'Média',
-            data_abertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    cur.close()
-    conn.close()
-
-init_db()
 
 def gerar_codigo_os():
     caracteres = string.ascii_uppercase + string.digits
@@ -57,7 +27,7 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if request.form.get('usuario') in USUARIOS_PERMITIDOS and request.form.get('senha') == PASSWORD_ADMIN:
+        if request.form.get('usuario') in ['tecsenior', 'tecnicon2', 'tecnicon1'] and request.form.get('senha') == 'S@cCham@d##s2005':
             session['logado'] = True
             session['usuario'] = request.form.get('usuario')
             return redirect(url_for('admin'))
@@ -90,10 +60,37 @@ def admin():
     conn.close()
     return render_template('admin.html', chamados=chamados, tecnico_atual=session.get('usuario'), busca=busca)
 
+@app.route('/arquivados')
+def arquivados():
+    if not session.get('logado'): return redirect(url_for('login'))
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM chamados WHERE status = 'Finalizado' ORDER BY id DESC")
+    chamados = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('arquivados.html', chamados=chamados)
+
 @app.route('/rat_avulsa')
 def rat_avulsa():
     if not session.get('logado'): return redirect(url_for('login'))
-    return render_template('rat.html', chamado={"id": 0, "codigo_os": gerar_codigo_os(), "cliente": "", "empresa": "", "whatsapp": "", "descricao": ""})
+    return render_template('rat.html', chamado={"id": 0, "codigo_os": gerar_codigo_os()})
+
+@app.route('/chamado/<int:id>/excluir', methods=['POST'])
+def excluir_chamado(id):
+    if not session.get('logado'): return redirect(url_for('login'))
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM chamados WHERE id = %s", (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('admin'))
+
+@app.route('/modelo_rat')
+def modelo_rat():
+    # Caminho absoluto para o arquivo na raiz
+    return send_file(os.path.join(os.getcwd(), 'modelo_rat.pdf'))
 
 @app.route('/dashboard')
 def dashboard():
@@ -105,9 +102,6 @@ def dashboard():
     cur.close()
     conn.close()
     return render_template('dashboard.html', stats=stats)
-
-# Adicione as rotas /arquivados, /detalhes, /finalizar e /excluir seguindo o padrão de 
-# abrir/fechar conexão com get_db_connection() e usar RealDictCursor.
 
 if __name__ == '__main__':
     app.run()
