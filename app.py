@@ -8,6 +8,7 @@ from flask import Flask, render_template, request, send_file, redirect, url_for,
 app = Flask(__name__)
 app.secret_key = 'chave_secreta_jrvti_2026'
 
+# O Render injeta a URL do banco de dados aqui
 DATABASE_URL = os.environ.get('DATABASE_URL')
 PDF_FOLDER = 'RATs_Gerados'
 MODELO_PDF = 'modelo_rat.pdf'
@@ -39,31 +40,72 @@ def init_db():
     cur.close()
     conn.close()
 
+# Executa ao iniciar
 init_db()
 
-# --- COPIE ABAIXO TODAS AS SUAS ROTAS ANTIGAS ---
-# Exemplo de como ajustar a rota 'admin' para o Postgres:
+def gerar_codigo_os():
+    caracteres = string.ascii_uppercase + string.digits
+    return f"OS-{''.join(random.choice(caracteres) for _ in range(6))}"
+
+# --- ROTAS ---
+
+@app.route('/')
+def index():
+    return render_template('cliente.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        usuario = request.form.get('usuario')
+        senha = request.form.get('senha')
+        if usuario in USUARIOS_PERMITIDOS and senha == PASSWORD_ADMIN:
+            session['logado'] = True
+            session['usuario'] = usuario
+            return redirect(url_for('admin'))
+        return render_template('login.html', erro="Credenciais incorretas.")
+    return render_template('login.html', erro=None)
+
 @app.route('/admin')
 def admin():
-    if not session.get('logado'): return redirect(url_for('login'))
+    if not session.get('logado'):
+        return redirect(url_for('login'))
+    
     conn = get_db_connection()
-    # Usamos RealDictCursor para o código funcionar como se fosse sqlite3.Row
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT * FROM chamados WHERE status != 'Finalizado' ORDER BY id DESC")
     chamados = cur.fetchall()
     cur.close()
     conn.close()
-    return render_template('admin.html', chamados=chamados)
+    return render_template('admin.html', chamados=chamados, tecnico_atual=session.get('usuario'))
 
-# Adicione aqui todas as outras rotas (@app.route('/arquivados'), /detalhes, /finalizar, etc.)
-# Lembre-se de substituir o bloco "with sqlite3.connect(DB_PATH) as conn:" 
-# pela estrutura:
-# conn = get_db_connection()
-# cur = conn.cursor(cursor_factory=RealDictCursor)
-# ... código ...
-# conn.commit()
-# cur.close()
-# conn.close()
+@app.route('/arquivados')
+def arquivados():
+    if not session.get('logado'): return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM chamados WHERE status = 'Finalizado' ORDER BY id DESC")
+    chamados = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('arquivados.html', chamados=chamados)
+
+@app.route('/dashboard')
+def dashboard():
+    if not session.get('logado'): return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT COUNT(*) as qtd, status FROM chamados GROUP BY status")
+    stats = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('dashboard.html', stats=stats)
+
+# Nota: As rotas de finalizar, excluir e rat devem seguir o mesmo padrão:
+# 1. Abrir conexão com get_db_connection()
+# 2. Usar cursor(cursor_factory=RealDictCursor)
+# 3. Fechar cursor e conexão sempre.
 
 if __name__ == '__main__':
     app.run()
