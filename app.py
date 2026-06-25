@@ -26,27 +26,29 @@ def index():
 
 @app.route('/enviar_chamado', methods=['POST'])
 def enviar_chamado():
-    # Coleta os dados do formulário
+    # Capturando todos os campos novos
     cliente = request.form.get('cliente')
     empresa = request.form.get('empresa')
     whatsapp = request.form.get('whatsapp')
+    marca = request.form.get('marca', '') # Novo
+    modelo = request.form.get('modelo', '') # Novo
     descricao = request.form.get('descricao')
     urgencia = request.form.get('urgencia', 'Média')
     
-    # Salva no banco de dados Postgres
+    # Criando uma descrição completa incluindo marca/modelo
+    descricao_completa = f"Equipamento: {marca} {modelo} | Detalhes: {descricao}"
+    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('''
         INSERT INTO chamados (codigo_os, cliente, empresa, whatsapp, descricao, urgencia)
         VALUES (%s, %s, %s, %s, %s, %s)
-    ''', (gerar_codigo_os(), cliente, empresa, whatsapp, descricao, urgencia))
+    ''', (gerar_codigo_os(), cliente, empresa, whatsapp, descricao_completa, urgencia))
     conn.commit()
     cur.close()
     conn.close()
-    
-    # Redireciona para uma página de sucesso (ou volta para o cliente.html)
     return "Chamado enviado com sucesso! <a href='/'>Voltar</a>"
-
+    
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
