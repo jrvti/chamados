@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Admin - JRV-TI</title>
+    <style>
+        :root {
+            --bg-geral: #f9f9f9;
+            --bg-container: #ffffff;
+            --texto-principal: #000000;
+            --texto-secundario: #666666;
+            --bg-tabela-par: #f2f2f2;
+            --border-cor: #000000;
+            --badge-bg: #eeeeee;
+        }
+
+        [data-theme="dark"] {
+            --bg-geral: #121212;
+            --bg-container: #1e1e1e;
+            --texto-principal: #ffffff;
+            --texto-secundario: #aaaaaa;
+            --bg-tabela-par: #2a2a2a;
+            --border-cor: #ffffff;
+            --badge-bg: #333333;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-geral); color: var(--texto-principal); padding: 30px; margin: 0; transition: background 0.2s, color 0.2s; }
+        .container { max-width: 1300px; background: var(--bg-container); padding: 25px; margin: auto; border: 2px solid var(--border-cor); }
+        .header-painel { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-cor); padding-bottom: 15px; margin-bottom: 20px; gap: 15px; }
+        h2 { color: var(--texto-principal); margin: 0; text-transform: uppercase; font-size: 20px; white-space: nowrap; }
+        
+        .acoes-header { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+        
+        .user-block { display: flex; align-items: center; gap: 5px; }
+        .user-badge { font-size: 12px; background: var(--badge-bg); color: var(--texto-principal); padding: 6px 10px; border: 1px solid var(--border-cor); font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+        .btn-logout { background: var(--texto-principal); color: var(--bg-container); border: 1px solid var(--border-cor); padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        .btn-logout:hover { background: var(--bg-container); color: var(--texto-principal); }
+        
+        .btn-arquivados, .btn-dashboard, .btn-rat-avulsa, .btn-novo-chamado, .btn-theme-toggle { background: var(--bg-container); color: var(--texto-principal); border: 2px solid var(--border-cor); padding: 5px 10px; text-decoration: none; font-weight: bold; font-size: 12px; text-transform: uppercase; display: inline-block; white-space: nowrap; cursor: pointer; }
+        .btn-arquivados:hover, .btn-dashboard:hover, .btn-rat-avulsa:hover, .btn-novo-chamado:hover, .btn-theme-toggle:hover { background: var(--texto-principal); color: var(--bg-container); }
+
+        .busca-container { margin-bottom: 20px; display: flex; gap: 10px; }
+        .input-busca { flex: 1; padding: 10px; border: 2px solid var(--border-cor); background: var(--bg-container); color: var(--texto-principal); font-size: 14px; font-weight: bold; }
+        .btn-busca { background: var(--texto-principal); color: var(--bg-container); border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; text-transform: uppercase; border: 2px solid var(--border-cor); }
+        .btn-limpar { background: var(--bg-container); color: var(--texto-principal); border: 2px solid var(--border-cor); padding: 8px 15px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; font-size: 14px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px; border: 1px solid var(--border-cor); text-align: left; vertical-align: middle; }
+        th { background-color: var(--texto-principal); color: var(--bg-container); font-weight: 600; text-transform: uppercase; }
+        tr:nth-child(even) { background-color: var(--bg-tabela-par); }
+        .link-os { color: var(--texto-principal); font-weight: bold; text-decoration: underline; cursor: pointer; }
+        
+        .select-inline { padding: 5px; border: 2px solid var(--border-cor); font-weight: bold; background: var(--bg-container); color: var(--texto-principal); font-size: 12px; }
+        .btn-acao-atender { background: var(--texto-principal); color: var(--bg-container); border: 2px solid var(--border-cor); padding: 6px 12px; cursor: pointer; font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        .btn-acao-atender:hover { opacity: 0.8; }
+        
+        .badge-aberto { background: var(--bg-container); color: var(--texto-principal); border: 1px dashed var(--border-cor); padding: 4px 8px; font-size: 12px; font-weight: bold; }
+        
+        .btn-atender { background: var(--texto-principal); color: var(--bg-container); padding: 8px 14px; text-decoration: none; font-weight: bold; font-size: 13px; display: inline-block; text-transform: uppercase; border: 1px solid var(--border-cor); }
+        .btn-salvar-mudanca { background: var(--texto-principal); color: var(--bg-container); border: 1px solid var(--border-cor); padding: 4px 8px; font-size: 11px; cursor: pointer; font-weight: bold; margin-left: 4px; text-transform: uppercase; }
+        
+        .btn-excluir { background: var(--bg-container); color: #cc0000; border: 1px solid #cc0000; padding: 5px 10px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .btn-excluir:hover { background: #cc0000; color: #ffffff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-painel">
+            <h2>JRV-TI — Chamados Ativos</h2>
+            <div class="acoes-header">
+                <button id="theme-toggle" class="btn-theme-toggle">🌙 Modo Escuro</button>
+                <a href="/" target="_blank" class="btn-novo-chamado">➕ Criar Chamado</a>
+                <a href="/rat_avulsa" class="btn-rat-avulsa">📝 Nova RAT</a>
+                <a href="/dashboard" class="btn-dashboard">📊 Ver Dashboard</a>
+                <a href="/arquivados" class="btn-arquivados">📁 Ver Chamados Fechados</a>
+                
+                <div class="user-block">
+                    <span class="user-badge">
+                        {% if tecnico_atual == 'tecnicon1' %}N1 - Maciel
+                        {% elif tecnico_atual == 'tecnicon2' %}N2 - Adams
+                        {% elif tecnico_atual == 'tecsenior' %}N3 - Jaime
+                        {% else %}{{ tecnico_atual }}{% endif %}
+                    </span>
+                    <a href="/logout" class="btn-logout">Sair</a>
+                </div>
+            </div>
+        </div>
+
+        <form method="GET" action="/admin" class="busca-container">
+            <input type="text" name="busca" class="input-busca" placeholder="Pesquisar por O.S., Cliente, Empresa, urgência ou problema..." value="{{ busca }}">
+            <button type="submit" class="btn-busca">🔍 Buscar</button>
+            {% if busca %}
+                <a href="/admin" class="btn-limpar">Limpar Filtro</a>
+            {% endif %}
+        </form>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Nº O.S.</th>
+                    <th>Cliente / Empresa</th>
+                    <th>WhatsApp</th>
+                    <th>Descrição Curta</th>
+                    <th>Urgência</th>
+                    <th>Status</th>
+                    <th>Técnico Responsável</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if not chamados %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 25px; color: var(--texto-secundario);">Nenhum chamado ativo encontrado.</td>
+                </tr>
+                {% endif %}
+                {% for chamado in chamados %}
+                <tr>
+                    <td><a href="/chamado/{{ chamado.id }}/detalhes" class="link-os">{{ chamado.codigo_os }}</a></td>
+                    <td><strong>{{ chamado.cliente }}</strong><br><span style="color: var(--texto-secundario);">{{ chamado.empresa }}</span></td>
+                    <td>{{ chamado.whatsapp }}</td>
+                    <td>{{ chamado.descricao[:40] }}...</td>
+                    
+                    {% if chamado.tecnico_responsavel == 'Nenhum' %}
+                        <td><span class="badge-aberto">{{ chamado.urgencia|upper }}</span></td>
+                        <td><span class="badge-aberto">ABERTO</span></td>
+                        <td><span class="badge-aberto">AGUARDANDO</span></td>
+                        <td>
+                            <form action="/admin" method="POST" style="margin:0; display: flex; gap: 5px;">
+                                <input type="hidden" name="id" value="{{ chamado.id }}">
+                                <input type="hidden" name="status" value="Em Atendimento">
+                                <input type="hidden" name="tecnico_responsavel" value="{{ tecnico_atual }}">
+                                <button type="submit" class="btn-acao-atender">Atender Chamado</button>
+                                
+                                <button type="button" class="btn-excluir" style="padding: 6px 12px; font-size: 12px;" onclick="if(confirm('Tem certeza absoluta que deseja excluir permanentemente este chamado ativo?')) { this.form.action='/chamado/{{ chamado.id }}/excluir'; this.form.submit(); }">❌ Excluir</button>
+                            </form>
+                        </td>
+                    {% else %}
+                        <form action="/admin" method="POST" style="margin:0;">
+                            <input type="hidden" name="id" value="{{ chamado.id }}">
+                            <td>
+                                <select name="urgencia" class="select-inline">
+                                    <option value="Baixa" {% if chamado.urgencia == 'Baixa' %}selected{% endif %}>BAIXA</option>
+                                    <option value="Média" {% if chamado.urgencia == 'Média' %}selected{% endif %}>MÉDIA</option>
+                                    <option value="Alta" {% if chamado.urgencia == 'Alta' %}selected{% endif %}>ALTA</option>
+                                    <option value="Crítica" {% if chamado.urgencia == 'Crítica' %}selected{% endif %}>CRÍTICA</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="status" class="select-inline">
+                                    <option value="Aberto" {% if chamado.status == 'Aberto' %}selected{% endif %}>ABERTO</option>
+                                    <option value="Em Atendimento" {% if chamado.status == 'Em Atendimento' %}selected{% endif %}>EM ATENDIMENTO</option>
+                                    <option value="Finalizado" {% if chamado.status == 'Finalizado' %}selected{% endif %}>FINALIZADO</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="tecnico_responsavel" class="select-inline">
+                                    <option value="tecnicon1" {% if chamado.tecnico_responsavel == 'tecnicon1' %}selected{% endif %}>N1 - Maciel</option>
+                                    <option value="tecnicon2" {% if chamado.tecnico_responsavel == 'tecnicon2' %}selected{% endif %}>N2 - Adams</option>
+                                    <option value="tecsenior" {% if chamado.tecnico_responsavel == 'tecsenior' %}selected{% endif %}>N3 - Jaime</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 5px; align-items: center;">
+                                    <button type="submit" class="btn-salvar-mudanca">Salvar</button>
+                                    <a href="/chamado/{{ chamado.id }}/rat" class="btn-atender" style="padding: 5px 10px; font-size:11px;">RAT</a>
+                                    
+                                    <button type="button" class="btn-excluir" onclick="if(confirm('Tem certeza absoluta que deseja excluir permanentemente este chamado ativo?')) { this.form.action='/chamado/{{ chamado.id }}/excluir'; this.form.submit(); }">❌ Excluir</button>
+                                </div>
+                            </td>
+                        </form>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme) {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'dark') {
+                themeToggleBtn.textContent = '☀️ Modo Claro';
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            let theme = 'light';
+            if (document.documentElement.getAttribute('data-theme') !== 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggleBtn.textContent = '☀️ Modo Claro';
+                theme = 'dark';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeToggleBtn.textContent = '🌙 Modo Escuro';
+                theme = 'light';
+            }
+            localStorage.setItem('theme', theme);
+        });
+    </script>
+</body>
+</html>

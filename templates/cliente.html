@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Abertura de Chamado Técnico - JRV-TI</title>
+    <style>
+        :root {
+            --bg-geral: #f4f4f4;
+            --bg-container: #ffffff;
+            --texto-principal: #000000;
+            --texto-secundario: #555555;
+            --border-cor: #000000;
+        }
+
+        [data-theme="dark"] {
+            --bg-geral: #121212;
+            --bg-container: #1e1e1e;
+            --texto-principal: #ffffff;
+            --texto-secundario: #cccccc;
+            --border-cor: #ffffff;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-geral); color: var(--texto-principal); padding: 40px 20px; margin: 0; transition: background 0.2s, color 0.2s; }
+        .container { max-width: 550px; background: var(--bg-container); padding: 30px; margin: auto; border: 2px solid var(--border-cor); box-shadow: 6px 6px 0px var(--border-cor); position: relative; }
+        
+        .theme-wrapper { position: absolute; top: 15px; right: 15px; }
+        .btn-theme-toggle { background: var(--bg-container); color: var(--texto-principal); border: 2px solid var(--border-cor); padding: 4px 8px; font-weight: bold; font-size: 11px; text-transform: uppercase; cursor: pointer; }
+        
+        h2 { text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--border-cor); padding-bottom: 10px; margin-top: 10px; font-size: 22px; color: var(--texto-principal); }
+        .sub { text-align: center; color: var(--texto-secundario); font-size: 13px; margin-bottom: 25px; font-weight: bold; }
+        
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 13px; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 10px; border: 2px solid var(--border-cor); background: var(--bg-container); color: var(--texto-principal); font-size: 14px; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: vertical; height: 100px; }
+        
+        .flex-equipamento { display: flex; gap: 10px; }
+        .flex-equipamento div { flex: 1; }
+        
+        .btn-enviar { width: 100%; background: var(--texto-principal); color: var(--bg-container); padding: 12px; border: none; font-size: 15px; font-weight: bold; text-transform: uppercase; border: 2px solid var(--border-cor); cursor: pointer; margin-top: 5px; }
+        .btn-enviar:hover { background: var(--bg-container); color: var(--texto-principal); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="theme-wrapper">
+            <button id="theme-toggle" class="btn-theme-toggle">🌙 Escuro</button>
+        </div>
+        <h2>Abertura de Chamado</h2>
+        <div class="sub">Suporte de TI e Sistemas de Monitoramento / Segurança</div>
+        
+        <form action="/enviar_chamado" method="POST">
+            <label for="cliente">Seu Nome / Solicitante:</label>
+            <input type="text" id="cliente" name="cliente" placeholder="Ex: Carlos Silva" required>
+
+            <label for="empresa">Empresa / Condomínio:</label>
+            <input type="text" id="empresa" name="empresa" placeholder="Ex: Mercado Central ou Particular" required>
+
+            <label for="whatsapp">Seu Celular / WhatsApp:</label>
+            <input type="text" id="whatsapp" name="whatsapp" placeholder="Ex: (11) 99999-9999" required>
+
+            <div class="flex-equipamento">
+                <div>
+                    <label for="marca">Marca (Opcional):</label>
+                    <input type="text" id="marca" name="marca" placeholder="Intelbras, Hikvision, ASUS...">
+                </div>
+                <div>
+                    <label for="modelo">Modelo / Tipo (Opcional):</label>
+                    <input type="text" id="modelo" name="modelo" placeholder="DVR, Câmera, Computador...">
+                </div>
+            </div>
+
+            <label for="descricao">Descrição Detalhada do Problema:</label>
+            <textarea id="descricao" name="descricao" placeholder="Descreva aqui o que está acontecendo com o sistema ou equipamento técnico..." required></textarea>
+
+            <button type="submit" class="btn-enviar">Enviar Ordem de Serviço</button>
+        </form>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggleBtn.textContent = '☀️ Claro';
+        }
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.getAttribute('data-theme') !== 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggleBtn.textContent = '☀️ Claro';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeToggleBtn.textContent = '🌙 Escuro';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>
