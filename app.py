@@ -89,9 +89,15 @@ def excluir_chamado(id):
 
 @app.route('/modelo_rat')
 def modelo_rat():
-    # Caminho absoluto para o arquivo na raiz
-    return send_file(os.path.join(os.getcwd(), 'modelo_rat.pdf'))
-
+    # Isso define o caminho base como a pasta onde o app.py está localizado
+    diretorio_base = os.path.dirname(os.path.abspath(__file__))
+    caminho_arquivo = os.path.join(diretorio_base, 'modelo_rat.pdf')
+    
+    if os.path.exists(caminho_arquivo):
+        return send_file(caminho_arquivo, mimetype='application/pdf')
+    else:
+        # Se cair aqui, o Render realmente não está vendo o arquivo no seu commit
+        return f"Arquivo não encontrado em: {caminho_arquivo}", 404
 @app.route('/dashboard')
 def dashboard():
     if not session.get('logado'): return redirect(url_for('login'))
