@@ -130,7 +130,7 @@ def finalizar_chamado_rat(id):
     conn.commit()
     cur.close()
     conn.close()
-    return jsonify({"sucesso": True}), 200
+    return jsonify({"sucesso": True, "mensagem": "Chamado arquivado com sucesso!"}), 200
 
 @app.route('/baixar_rat/<int:id>')
 def baixar_rat(id):
