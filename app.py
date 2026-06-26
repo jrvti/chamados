@@ -136,21 +136,21 @@ def finalizar_chamado_rat(id):
     # Resposta em JSON para o JavaScript não dar erro de comunicação
     return jsonify({"sucesso": True, "mensagem": "Chamado finalizado e RAT salva!"}), 200
 
-# --- NOVA ROTA PARA BAIXAR O PDF DA RAT ---
 @app.route('/baixar_rat/<int:id>')
 def baixar_rat(id):
     if not session.get('logado'): return redirect(url_for('login'))
     
-    diretorio = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'RATs_Gerados')
+    # Define o caminho absoluto para a pasta na raiz do projeto
+    diretorio = os.path.join(os.getcwd(), 'RATs_Gerados')
     caminho_arquivo = os.path.join(diretorio, f'RAT_OS_{id}.pdf')
     
     if os.path.exists(caminho_arquivo):
-        # as_attachment=True força o navegador a fazer o download em vez de abrir
         return send_file(caminho_arquivo, as_attachment=True, download_name=f'RAT_OS_{id}.pdf')
     else:
-        return "Arquivo PDF não encontrado para esta OS. Talvez a RAT não tenha sido gerada.", 404
-# ------------------------------------------
-
+        # Apenas para depuração: imprime no console do Render onde ele procurou
+        print(f"DEBUG: Procurando arquivo em: {caminho_arquivo}")
+        return f"Arquivo PDF não encontrado (Procurado em: {caminho_arquivo})", 404
+        
 @app.route('/chamado/<int:id>/excluir', methods=['POST'])
 def excluir_chamado(id):
     if not session.get('logado'): return redirect(url_for('login'))
