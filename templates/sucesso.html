@@ -2,21 +2,77 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sucesso - JRV-TI</title>
+    <title>Chamado Aberto - JRV-TI</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #1e293b; }
-        .card { background: #ffffff; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 1px solid #e2e8f0; max-width: 400px; width: 90%; }
-        h1 { color: #2563eb; margin-top: 0; }
-        p { color: #64748b; margin-bottom: 30px; }
-        a { display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
-        a:hover { opacity: 0.9; }
+        :root {
+            --bg-geral: #f4f4f4;
+            --bg-container: #ffffff;
+            --texto-principal: #000000;
+            --texto-secundario: #555555;
+            --border-cor: #000000;
+        }
+
+        [data-theme="dark"] {
+            --bg-geral: #121212;
+            --bg-container: #1e1e1e;
+            --texto-principal: #ffffff;
+            --texto-secundario: #cccccc;
+            --border-cor: #ffffff;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-geral); color: var(--texto-principal); padding: 40px 20px; margin: 0; transition: background 0.2s, color 0.2s; display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box; }
+        
+        /* A mesma caixa estilo Brutalista do seu cliente.html */
+        .container { width: 100%; max-width: 500px; background: var(--bg-container); padding: 40px 30px; border: 2px solid var(--border-cor); box-shadow: 6px 6px 0px var(--border-cor); text-align: center; position: relative; }
+        
+        .theme-wrapper { position: absolute; top: 15px; right: 15px; }
+        .btn-theme-toggle { background: var(--bg-container); color: var(--texto-principal); border: 2px solid var(--border-cor); padding: 4px 8px; font-weight: bold; font-size: 11px; text-transform: uppercase; cursor: pointer; }
+        
+        h1 { margin-top: 20px; text-transform: uppercase; font-size: 26px; border-bottom: 2px solid var(--border-cor); padding-bottom: 10px; }
+        p { font-size: 15px; margin: 20px 0; font-weight: bold; color: var(--texto-secundario); }
+        
+        /* Caixa em destaque para o código da OS */
+        .os-box { background: var(--bg-geral); border: 2px dashed var(--border-cor); padding: 20px; font-size: 28px; font-weight: bold; letter-spacing: 2px; margin: 25px 0; color: var(--texto-principal); }
+        
+        .btn-voltar { display: inline-block; width: 100%; background: var(--texto-principal); color: var(--bg-container); padding: 14px; font-size: 15px; font-weight: bold; text-transform: uppercase; border: 2px solid var(--border-cor); cursor: pointer; text-decoration: none; box-sizing: border-box; margin-top: 15px; }
+        .btn-voltar:hover { background: var(--bg-container); color: var(--texto-principal); }
     </style>
 </head>
 <body>
-    <div class="card">
+    <div class="container">
+        <div class="theme-wrapper">
+            <button id="theme-toggle" class="btn-theme-toggle">🌙 Escuro</button>
+        </div>
+        
         <h1>Sucesso!</h1>
-        <p>Seu chamado foi registrado com sucesso em nosso sistema.</p>
-        <a href="/">Voltar ao Início</a>
+        <p>Seu chamado técnico foi registrado. Por favor, guarde o número da sua Ordem de Serviço:</p>
+        
+        <div class="os-box">{{ codigo_os }}</div>
+        
+        <a href="/" class="btn-voltar">Voltar ao Início</a>
     </div>
+
+    <script>
+        // Mesmo script de tema claro/escuro
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme');
+        
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggleBtn.textContent = '☀️ Claro';
+        }
+        
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.getAttribute('data-theme') !== 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggleBtn.textContent = '☀️ Claro';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeToggleBtn.textContent = '🌙 Escuro';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
 </body>
 </html>
