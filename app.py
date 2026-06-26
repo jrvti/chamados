@@ -8,7 +8,6 @@ from flask import Flask, render_template, request, send_file, redirect, url_for,
 app = Flask(__name__)
 app.secret_key = 'chave_secreta_jrvti_2026'
 
-# O Render fornece esta variável automaticamente
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 def get_db_connection():
@@ -17,8 +16,6 @@ def get_db_connection():
 def gerar_codigo_os():
     caracteres = string.ascii_uppercase + string.digits
     return f"OS-{''.join(random.choice(caracteres) for _ in range(6))}"
-
-# --- ROTAS ---
 
 @app.route('/')
 def index():
@@ -32,11 +29,8 @@ def enviar_chamado():
     marca = request.form.get('marca', 'Não informado')
     modelo = request.form.get('modelo', 'Não informado')
     descricao = request.form.get('descricao')
-    
     descricao_final = f"Equipamento: {marca} / {modelo} | Problema: {descricao}"
-    
     codigo_gerado = gerar_codigo_os()
-    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('''
@@ -46,7 +40,6 @@ def enviar_chamado():
     conn.commit()
     cur.close()
     conn.close()
-    
     return render_template('sucesso.html', codigo_os=codigo_gerado)
     
 @app.route('/login', methods=['GET', 'POST'])
@@ -69,12 +62,10 @@ def admin():
     if not session.get('logado'): return redirect(url_for('login'))
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    
     if request.method == 'POST':
         cur.execute("UPDATE chamados SET status = %s, tecnico_responsavel = %s, urgencia = %s WHERE id = %s", 
                     (request.form.get('status'), request.form.get('tecnico_responsavel'), request.form.get('urgencia'), request.form.get('id')))
         conn.commit()
-    
     busca = request.args.get('busca', '')
     query = "SELECT * FROM chamados WHERE status != 'Finalizado'"
     if busca:
@@ -101,6 +92,18 @@ def rat_avulsa():
     if not session.get('logado'): return redirect(url_for('login'))
     return render_template('rat.html', chamado={"id": 0, "codigo_os": gerar_codigo_os()})
 
+@app.route('/chamado/<int:id>')
+def detalhes_chamado(id):
+    if not session.get('logado'): return redirect(url_for('login'))
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM chamados WHERE id = %s", (id,))
+    chamado = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not chamado: return "Chamado não encontrado", 404
+    return render_template('detalhes.html', chamado=chamado)
+
 @app.route('/chamado/<int:id>/rat')
 def rat_chamado(id):
     if not session.get('logado'): return redirect(url_for('login'))
@@ -110,47 +113,33 @@ def rat_chamado(id):
     chamado = cur.fetchone()
     cur.close()
     conn.close()
-    
-    if not chamado:
-        return "Chamado não encontrado", 404
-        
+    if not chamado: return "Chamado não encontrado", 404
     return render_template('rat.html', chamado=chamado)
 
 @app.route('/chamado/<int:id>/finalizar', methods=['POST'])
 def finalizar_chamado_rat(id):
     if not session.get('logado'): return jsonify({"erro": "Não autorizado"}), 401
-    
+    diretorio = os.path.join(os.getcwd(), 'RATs_Gerados')
+    os.makedirs(diretorio, exist_ok=True)
     if 'pdf' in request.files:
         arquivo_pdf = request.files['pdf']
-        diretorio = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'RATs_Gerados')
-        os.makedirs(diretorio, exist_ok=True)
         arquivo_pdf.save(os.path.join(diretorio, f'RAT_OS_{id}.pdf'))
-        
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("UPDATE chamados SET status = 'Finalizado' WHERE id = %s", (id,))
     conn.commit()
     cur.close()
     conn.close()
-    
-    # Resposta em JSON para o JavaScript não dar erro de comunicação
-    return jsonify({"sucesso": True, "mensagem": "Chamado finalizado e RAT salva!"}), 200
+    return jsonify({"sucesso": True}), 200
 
 @app.route('/baixar_rat/<int:id>')
 def baixar_rat(id):
     if not session.get('logado'): return redirect(url_for('login'))
-    
-    # Define o caminho absoluto para a pasta na raiz do projeto
-    diretorio = os.path.join(os.getcwd(), 'RATs_Gerados')
-    caminho_arquivo = os.path.join(diretorio, f'RAT_OS_{id}.pdf')
-    
+    caminho_arquivo = os.path.join(os.getcwd(), 'RATs_Gerados', f'RAT_OS_{id}.pdf')
     if os.path.exists(caminho_arquivo):
-        return send_file(caminho_arquivo, as_attachment=True, download_name=f'RAT_OS_{id}.pdf')
-    else:
-        # Apenas para depuração: imprime no console do Render onde ele procurou
-        print(f"DEBUG: Procurando arquivo em: {caminho_arquivo}")
-        return f"Arquivo PDF não encontrado (Procurado em: {caminho_arquivo})", 404
-        
+        return send_file(caminho_arquivo, as_attachment=True)
+    return "Arquivo PDF não encontrado", 404
+
 @app.route('/chamado/<int:id>/excluir', methods=['POST'])
 def excluir_chamado(id):
     if not session.get('logado'): return redirect(url_for('login'))
@@ -164,24 +153,10 @@ def excluir_chamado(id):
 
 @app.route('/modelo_base_pdf')
 def modelo_rat():
-    diretorio_base = os.path.dirname(os.path.abspath(__file__))
-    caminho_arquivo = os.path.join(diretorio_base, 'modelo_rat.pdf')
-    
+    caminho_arquivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modelo_rat.pdf')
     if os.path.exists(caminho_arquivo):
         return send_file(caminho_arquivo, mimetype='application/pdf')
-    else:
-        return "Arquivo não encontrado", 404
+    return "Arquivo não encontrado", 404
         
-@app.route('/dashboard')
-def dashboard():
-    if not session.get('logado'): return redirect(url_for('login'))
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT status, COUNT(*) as qtd FROM chamados GROUP BY status")
-    stats = cur.fetchall()
-    cur.close()
-    conn.close()
-    return render_template('dashboard.html', stats=stats)
-
 if __name__ == '__main__':
     app.run()
