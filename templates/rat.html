@@ -197,7 +197,6 @@
 </div>
 
 <script>
-    // Coordenadas mestre com mapeamento direto (Inversão do eixo Y tratada no processamento)
     let coordenadas = {
         cliente: { x: 76, y: 79, label: "Cliente" }, n_ordem: { x: 498, y: 78, label: "Nº Ordem" },
         endereco: { x: 88, y: 92, label: "Endereço" }, cpf_rg: { x: 495, y: 92, label: "CPF/RG" },
@@ -218,55 +217,34 @@
     let pdfOriginalBytes = null;
     let camada, container;
 
-    function alternarTemaCor() {
-        document.body.classList.toggle('modo-claro');
-    }
+    function alternarTemaCor() { document.body.classList.toggle('modo-claro'); }
 
     async function carregarPdfModeloAutomatico() {
         const statusBox = document.getElementById('statusSistema');
-        console.log("[JRV-LOG] Iniciando busca do PDF original em /modelo_base_pdf...");
         try {
             const resposta = await fetch('/modelo_base_pdf');
-            if(!resposta.ok) throw new Error("Erro HTTP recebido do servidor: " + resposta.status);
-            
+            if(!resposta.ok) throw new Error("Erro");
             const arrayBuffer = await resposta.arrayBuffer();
             pdfOriginalBytes = new Uint8Array(arrayBuffer);
-            console.log("[JRV-LOG] PDF baixado com sucesso. Tamanho total:", pdfOriginalBytes.length, "bytes.");
-            
             statusBox.style.background = "#22c55e";
             statusBox.innerText = "✔ MODELO BASE PRONTO";
-            
-            // Renderiza o PDF inicial com os dados carregados do Jinja/Flask
             await atualizarPreview();
         } catch(err) {
             statusBox.style.background = "#ef4444";
             statusBox.innerText = "⚠️ FALHA AO CARREGAR O ARQUIVO BASE";
-            console.error("[JRV-LOG] Erro crítico no carregamento do PDF base:", err);
         }
     }
 
     function inicializarInterface() {
-        console.log("[JRV-LOG] Inicializando componentes visuais da interface...");
         camada = document.getElementById('camada-arrastavel');
         container = document.getElementById('canvasContainer');
-        
-        // Recupera última calibração salva no navegador se houver
         const localCoords = localStorage.getItem('coordenadas_rat_v2');
-        if(localCoords) {
-            try { 
-                coordenadas = JSON.parse(localCoords); 
-                console.log("[JRV-LOG] Coordenadas personalizadas recuperadas do LocalStorage.");
-            } catch(e){
-                console.warn("[JRV-LOG] Falha ao analisar JSON do LocalStorage, usando padrão de fábrica.");
-            }
-        }
-
+        if(localCoords) { try { coordenadas = JSON.parse(localCoords); } catch(e){} }
         for (let chave in coordenadas) {
             const indicador = document.getElementById(`pos_${chave}`);
             if(indicador) indicador.innerText = `X: ${coordenadas[chave].x} | Y: ${coordenadas[chave].y}`;
             criarPontoVisual(chave, coordenadas[chave].x, coordenadas[chave].y, coordenadas[chave].label);
         }
-        
         adicionarNovaLinhaMaterial();
         carregarPdfModeloAutomatico();
     }
@@ -274,11 +252,8 @@
     function criarPontoVisual(id, x, y, label) {
         const ponto = document.createElement('div');
         ponto.className = 'ponto-alvo'; ponto.setAttribute('data-label', label); ponto.id = `ponto_${id}`;
-        
-        // Sincroniza visual com o contêiner proporcionalmente
         ponto.style.left = `${(x / 612) * 100}%`; 
         ponto.style.top = `${(y / 792) * 100}%`;
-        
         configurarArrasto(ponto, id);
         camada.appendChild(ponto);
     }
@@ -286,43 +261,17 @@
     function adicionarNovaLinhaMaterial() {
         contadorItens++; const i = contadorItens;
         if(i > 8) return; 
-        
-        const saltoY = (i - 1) * 15;
-        const yBase = 392 + saltoY;
-
+        const saltoY = (i - 1) * 15; const yBase = 392 + saltoY;
         coordenadas[`m_qtd_${i}`] = { x: 56, y: yBase, label: `Qtd L${i}` };
         coordenadas[`m_unid_${i}`] = { x: 113, y: yBase, label: `Un L${i}` };
         coordenadas[`m_unit_${i}`] = { x: 166, y: yBase, label: `Unit L${i}` };
         coordenadas[`m_desc_${i}`] = { x: 231, y: yBase, label: `Desc L${i}` };
         coordenadas[`m_total_${i}`] = { x: 445, y: yBase, label: `Total L${i}` };
-
         const blocoMat = document.createElement('div');
         blocoMat.id = `bloco_mat_completo_${i}`;
-        blocoMat.innerHTML = `
-            <div class="linha-material">
-                <input type="text" id="val_m_qtd_${i}" placeholder="Qtd" style="width: 12%;" oninput="atualizarPreview()">
-                <input type="text" id="val_m_unid_${i}" placeholder="Unid" style="width: 12%;" oninput="atualizarPreview()">
-                <input type="text" id="val_m_unit_${i}" placeholder="V. Unit" style="width: 16%;" oninput="atualizarPreview()">
-                <input type="text" id="val_m_desc_${i}" placeholder="Descrição do Item/Serviço" style="width: 44%;" oninput="atualizarPreview()">
-                <input type="text" id="val_m_total_${i}" placeholder="Total" style="width: 16%;" oninput="atualizarPreview()">
-            </div>
-            <div class="info-pos-container" id="pos_container_dinamico_${i}">
-                <span class="info-pos info-pos-dinamica" id="pos_m_qtd_${i}">X: 56 | Y: ${yBase}</span>
-                <span class="info-pos info-pos-dinamica" id="pos_m_unid_${i}">X: 113 | Y: ${yBase}</span>
-                <span class="info-pos info-pos-dinamica" id="pos_m_unit_${i}">X: 166 | Y: ${yBase}</span>
-                <span class="info-pos info-pos-dinamica" id="pos_m_desc_${i}">X: 231 | Y: ${yBase}</span>
-                <span class="info-pos info-pos-dinamica" id="pos_m_total_${i}">X: 445 | Y: ${yBase}</span>
-            </div>
-        `;
+        blocoMat.innerHTML = `<div class="linha-material"><input type="text" id="val_m_qtd_${i}" placeholder="Qtd" style="width: 12%;" oninput="atualizarPreview()"><input type="text" id="val_m_unid_${i}" placeholder="Unid" style="width: 12%;" oninput="atualizarPreview()"><input type="text" id="val_m_unit_${i}" placeholder="V. Unit" style="width: 16%;" oninput="atualizarPreview()"><input type="text" id="val_m_desc_${i}" placeholder="Descrição" style="width: 44%;" oninput="atualizarPreview()"><input type="text" id="val_m_total_${i}" placeholder="Total" style="width: 16%;" oninput="atualizarPreview()"></div><div class="info-pos-container" id="pos_container_dinamico_${i}"><span class="info-pos info-pos-dinamica" id="pos_m_qtd_${i}">X: 56 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_unid_${i}">X: 113 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_unit_${i}">X: 166 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_desc_${i}">X: 231 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_total_${i}">X: 445 | Y: ${yBase}</span></div>`;
         document.getElementById('container-linhas-materiais').appendChild(blocoMat);
-
-        if(camada) {
-            criarPontoVisual(`m_qtd_${i}`, 56, yBase, `Qtd L${i}`);
-            criarPontoVisual(`m_unid_${i}`, 113, yBase, `Un L${i}`);
-            criarPontoVisual(`m_unit_${i}`, 166, yBase, `Unit L${i}`);
-            criarPontoVisual(`m_desc_${i}`, 231, yBase, `Desc L${i}`);
-            criarPontoVisual(`m_total_${i}`, 445, yBase, `Total L${i}`);
-        }
+        if(camada) { criarPontoVisual(`m_qtd_${i}`, 56, yBase, `Qtd L${i}`); criarPontoVisual(`m_unid_${i}`, 113, yBase, `Un L${i}`); criarPontoVisual(`m_unit_${i}`, 166, yBase, `Unit L${i}`); criarPontoVisual(`m_desc_${i}`, 231, yBase, `Desc L${i}`); criarPontoVisual(`m_total_${i}`, 445, yBase, `Total L${i}`); }
         atualizarPreview();
     }
 
@@ -330,197 +279,86 @@
         if (contadorItens <= 1) return;
         const i = contadorItens;
         const bloco = document.getElementById(`bloco_mat_completo_${i}`); if (bloco) bloco.remove();
-        const chavesParaRemover = [`m_qtd_${i}`, `m_unid_${i}`, `m_unit_${i}`, `m_desc_${i}`, `m_total_${i}`];
-        chavesParaRemover.forEach(chave => {
-            const pontoVisual = document.getElementById(`ponto_${chave}`); if (pontoVisual) pontoVisual.remove();
-            delete coordenadas[chave];
-        });
+        [`m_qtd_${i}`, `m_unid_${i}`, `m_unit_${i}`, `m_desc_${i}`, `m_total_${i}`].forEach(chave => { const ponto = document.getElementById(`ponto_${chave}`); if (ponto) ponto.remove(); delete coordenadas[chave]; });
         contadorItens--; atualizarPreview();
     }
 
     function configurarArrasto(elemento, chave) {
         elemento.onmousedown = function(e) {
             e.preventDefault();
-            
             document.onmousemove = function(e) {
                 const rect = container.getBoundingClientRect();
-                let xPixel = e.clientX - rect.left; 
-                let yPixel = e.clientY - rect.top;
-                
+                let xPixel = e.clientX - rect.left; let yPixel = e.clientY - rect.top;
                 if(xPixel < 0) xPixel = 0; if(xPixel > rect.width) xPixel = rect.width; 
                 if(yPixel < 0) yPixel = 0; if(yPixel > rect.height) yPixel = rect.height;
-                
-                const xPdf = Math.round((xPixel / rect.width) * 612); 
-                const yPdf = Math.round((yPixel / rect.height) * 792);
-                
-                coordenadas[chave].x = xPdf; 
-                coordenadas[chave].y = yPdf;
-                
-                elemento.style.left = `${(xPixel / rect.width) * 100}%`; 
-                elemento.style.top = `${(yPixel / rect.height) * 100}%`;
-                
-                const indicador = document.getElementById(`pos_${chave}`); 
-                if(indicador) indicador.innerText = `X: ${xPdf} | Y: ${yPdf}`;
+                const xPdf = Math.round((xPixel / rect.width) * 612); const yPdf = Math.round((yPixel / rect.height) * 792);
+                coordenadas[chave].x = xPdf; coordenadas[chave].y = yPdf;
+                elemento.style.left = `${(xPixel / rect.width) * 100}%`; elemento.style.top = `${(yPixel / rect.height) * 100}%`;
+                const ind = document.getElementById(`pos_${chave}`); if(ind) ind.innerText = `X: ${xPdf} | Y: ${yPdf}`;
             };
-            
-            document.onmouseup = function() { 
-                document.onmousemove = null; 
-                document.onmouseup = null; 
-                localStorage.setItem('coordenadas_rat_v2', JSON.stringify(coordenadas));
-                atualizarPreview(); 
-            };
+            document.onmouseup = function() { document.onmousemove = null; document.onmouseup = null; localStorage.setItem('coordenadas_rat_v2', JSON.stringify(coordenadas)); atualizarPreview(); };
         };
     }
 
     function alternarMiras() {
         const btn = document.getElementById('btnMiras');
-        if (container.classList.contains('ocultar-pontos')) {
-            container.classList.remove('ocultar-pontos'); btn.innerText = "Ocultar Pontos de Ajuste";
-        } else {
-            container.classList.add('ocultar-pontos'); btn.innerText = "Exibir Pontos de Ajuste";
-        }
+        if (container.classList.contains('ocultar-pontos')) { container.classList.remove('ocultar-pontos'); btn.innerText = "Ocultar Pontos de Ajuste"; }
+        else { container.classList.add('ocultar-pontos'); btn.innerText = "Exibir Pontos de Ajuste"; }
     }
 
-    function quebrarTextoEmLinhas(texto, larguraMaximaCaracteres) {
-        if (!texto) return []; 
-        const palavras = texto.split(' '); 
-        const linhas = []; 
-        let linhaAtual = '';
-        palavras.forEach(palavra => {
-            if ((linhaAtual + palavra).length > larguraMaximaCaracteres) { 
-                linhas.push(linhaAtual.trim()); 
-                linhaAtual = palavra + ' '; 
-            } else { 
-                linhaAtual += palavra + ' '; 
-            }
-        });
-        if (linhaAtual) linhas.push(linhaAtual.trim()); 
-        return linhas;
+    function quebrarTextoEmLinhas(texto, largura) {
+        if (!texto) return []; const palavras = texto.split(' '); const linhas = []; let linhaAtual = '';
+        palavras.forEach(p => { if ((linhaAtual + p).length > largura) { linhas.push(linhaAtual.trim()); linhaAtual = p + ' '; } else { linhaAtual += p + ' '; } });
+        if (linhaAtual) linhas.push(linhaAtual.trim()); return linhas;
     }
 
     async function processarDocumento() {
-        if (!pdfOriginalBytes) {
-            console.warn("[JRV-LOG] Bloqueado: Nao ha bytes do PDF carregados ainda.");
-            return null;
-        }
-        try {
-            console.log("[JRV-LOG] Processando e fundindo dados com PDF-Lib...");
-            const pdfDoc = await PDFLib.PDFDocument.load(pdfOriginalBytes);
-            const pagina = pdfDoc.getPages()[0]; 
-            const { height } = pagina.getSize();
-            
-            // Incorpora fonte nativa estável
-            const fontePadrao = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        if (!pdfOriginalBytes) return null;
+        const pdfDoc = await PDFLib.PDFDocument.load(pdfOriginalBytes);
+        const pagina = pdfDoc.getPages()[0]; const { height } = pagina.getSize();
+        const fontePadrao = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const limparTexto = (txt) => txt ? txt.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+        const escrever = (id, coord, tam = 10) => { const el = document.getElementById(`val_${id}`); if (el && el.value.trim()) pagina.drawText(limparTexto(el.value), { x: coordenadas[coord].x, y: height - coordenadas[coord].y, size: tam, font: fontePadrao, color: PDFLib.rgb(0, 0, 0) }); };
+        const escribirBloco = (id, coord, tam = 9) => { const el = document.getElementById(`val_${id}`); if (el && el.value.trim()) { quebrarTextoEmLinhas(el.value, 110).forEach((linha, idx) => { pagina.drawText(limparTexto(linha), { x: coordenadas[coord].x, y: height - (coordenadas[coord].y + (idx * 12)), size: tam, font: fontePadrao, color: PDFLib.rgb(0, 0, 0) }); }); } };
 
-            // Filtro para prevenir estouro de caracteres especiais que o PDF-Lib rejeita nativamente
-            const limparTexto = (txt) => {
-                if (!txt) return "";
-                return txt.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            };
-
-            const escrever = (idCampo, chaveCoord, tam = 10) => {
-                const el = document.getElementById(`val_${idCampo}`); 
-                if (!el || !el.value.trim() || !coordenadas[chaveCoord]) return;
-                
-                // Conversão de Y correta (height - y) para compensar o padrão cartesiano do PDF
-                pagina.drawText(limparTexto(el.value), { 
-                    x: coordenadas[chaveCoord].x, 
-                    y: height - coordenadas[chaveCoord].y, 
-                    size: tam, 
-                    font: fontePadrao, 
-                    color: PDFLib.rgb(0, 0, 0) 
-                });
-            };
-            
-            const escribirBlocoTexto = (idCampo, chaveCoord, larguraMax, espacamentoLinha = 12, tam = 9) => {
-                const el = document.getElementById(`val_${idCampo}`); 
-                if (!el || !el.value.trim() || !coordenadas[chaveCoord]) return;
-                const linhas = quebrarTextoEmLinhas(el.value, larguraMax); 
-                let yAtual = coordenadas[chaveCoord].y;
-                linhas.forEach(linha => {
-                    pagina.drawText(limparTexto(linha), { 
-                        x: coordenadas[chaveCoord].x, 
-                        y: height - yAtual, 
-                        size: tam, 
-                        font: fontePadrao, 
-                        color: PDFLib.rgb(0, 0, 0) 
-                    }); 
-                    yAtual += espacamentoLinha;
-                });
-            };
-
-            escrever('cliente', 'cliente'); escrever('n_ordem', 'n_ordem'); escrever('endereco', 'endereco'); escrever('cpf_rg', 'cpf_rg');
-            escrever('contato1', 'contato1'); escrever('data_in', 'data_in'); escrever('hora_in', 'hora_in'); escrever('contato2', 'contato2');
-            escrever('data_out', 'data_out'); escrever('hora_out', 'hora_out'); escrever('atendente', 'atendente'); escrever('telefones', 'telefones');
-            escrever('usuario', 'usuario'); escrever('senha', 'senha'); escrever('marca', 'marca'); escrever('modelo', 'modelo');
-            escrever('memoria', 'memoria'); escrever('hd', 'hd'); escrever('processador', 'processador'); escrever('mainboard', 'mainboard');
-            
-            escribirBlocoTexto('defeito', 'defeito', 110, 12, 9); 
-            escribirBlocoTexto('detalhamentos', 'detalhamentos', 110, 12, 9); 
-            escribirBlocoTexto('observacoes', 'observacoes', 110, 12, 9);
-            escrever('de_acordo', 'de_acordo');
-
-            for (let i = 1; i <= contadorItens; i++) {
-                escrever(`m_qtd_${i}`, `m_qtd_${i}`, 9); 
-                escrever(`m_unid_${i}`, `m_unid_${i}`, 9);
-                escrever(`m_unit_${i}`, `m_unit_${i}`, 9); 
-                escrever(`m_desc_${i}`, `m_desc_${i}`, 9); 
-                escrever(`m_total_${i}`, `m_total_${i}`, 9);
-            }
-            
-            escrever('total_generel', 'total_generel', 11); escrever('pagamento', 'pagamento'); escrever('tec_nome', 'tec_nome'); escrever('data_f', 'data_f'); escrever('drt', 'drt');
-            
-            console.log("[JRV-LOG] Compilação realizada. Salvando novo documento...");
-            return await pdfDoc.save();
-        } catch (e) { 
-            console.error("[JRV-LOG] Erro interno fatal ao desenhar textos no PDF:", e);
-            return pdfOriginalBytes; 
-        }
+        escrever('cliente', 'cliente'); escrever('n_ordem', 'n_ordem'); escrever('endereco', 'endereco'); escrever('cpf_rg', 'cpf_rg');
+        escrever('contato1', 'contato1'); escrever('data_in', 'data_in'); escrever('hora_in', 'hora_in'); escrever('contato2', 'contato2');
+        escrever('data_out', 'data_out'); escrever('hora_out', 'hora_out'); escrever('atendente', 'atendente'); escrever('telefones', 'telefones');
+        escrever('usuario', 'usuario'); escrever('senha', 'senha'); escrever('marca', 'marca'); escrever('modelo', 'modelo');
+        escrever('memoria', 'memoria'); escrever('hd', 'hd'); escrever('processador', 'processador'); escrever('mainboard', 'mainboard');
+        escribirBloco('defeito', 'defeito'); escribirBloco('detalhamentos', 'detalhamentos'); escribirBloco('observacoes', 'observacoes');
+        escrever('de_acordo', 'de_acordo');
+        for (let i = 1; i <= contadorItens; i++) { escrever(`m_qtd_${i}`, `m_qtd_${i}`, 9); escrever(`m_unid_${i}`, `m_unid_${i}`, 9); escrever(`m_unit_${i}`, `m_unit_${i}`, 9); escrever(`m_desc_${i}`, `m_desc_${i}`, 9); escrever(`m_total_${i}`, `m_total_${i}`, 9); }
+        escrever('total_generel', 'total_generel', 11); escrever('pagamento', 'pagamento'); escrever('tec_nome', 'tec_nome'); escrever('data_f', 'data_f'); escrever('drt', 'drt');
+        return await pdfDoc.save();
     }
 
     async function atualizarPreview() {
-        if (!pdfOriginalBytes) return; 
-        console.log("[JRV-LOG] Solicitando atualização da janela de visualização...");
-        const bytesModificados = await processarDocumento(); 
-        if (!bytesModificados) return;
-        
-        const blob = new Blob([bytesModificados], { type: 'application/pdf' }); 
-        const url = URL.createObjectURL(blob);
-        
-        const frame = document.getElementById('pdf-frame'); 
-        frame.src = url + "#toolbar=0&navpanes=0";
-        console.log("[JRV-LOG] URL do Preview atualizada no iframe com sucesso.");
+        if (!pdfOriginalBytes) return;
+        const bytes = await processarDocumento();
+        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+        document.getElementById('pdf-frame').src = url + "#toolbar=0&navpanes=0";
     }
 
     async function salvarEFinalizarNoServidor() {
-        if (!pdfOriginalBytes) { alert("O modelo RAT básico não está pronto!"); return; }
-        const confirmar = confirm("Finalizar atendimento e arquivar a RAT permanente?");
-        if(!confirmar) return;
-
-        const bytesModificados = await processarDocumento();
-        const blob = new Blob([bytesModificados], { type: 'application/pdf' });
-        
+        if (!pdfOriginalBytes) return;
+        if(!confirm("Finalizar atendimento e arquivar a RAT?")) return;
+        const bytes = await processarDocumento();
         const dadosForm = new FormData();
-        dadosForm.append('pdf_rat', blob, 'rat_firmada.pdf');
+        // O campo deve ser 'pdf' conforme definido no seu app.py
+        dadosForm.append('pdf', new Blob([bytes], { type: 'application/pdf' }), 'rat_firmada.pdf');
 
-        fetch('/chamado/{{ chamado.id }}/finalizar', {
-            method: 'POST',
-            body: dadosForm
-        })
+        fetch('/chamado/{{ chamado.id }}/finalizar', { method: 'POST', body: dadosForm })
         .then(res => res.json())
         .then(dados => {
-            if(dados.success) {
-                alert("RAT compilada e arquivada com sucesso!");
-                window.location.href = '/admin';
-            } else {
-                alert("Erro ao salvar: " + dados.error);
-            }
+            // Usa a mensagem vinda do servidor ou a padrão
+            alert(dados.mensagem || "Chamado arquivado com sucesso!");
+            window.location.href = '/admin';
         })
-        .catch(err => alert("Erro de comunicação com o servidor."));
+        .catch(() => alert("Erro ao finalizar chamado."));
     }
 
     window.onload = inicializarInterface;
 </script>
-
 </body>
 </html>
