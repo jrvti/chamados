@@ -89,12 +89,13 @@
                     </td>
                     <td>{{ chamado.data_abertura }}</td>
                     <td>
-                        <div style="display: flex; gap: 8px;">
-                            <a href="/baixar_rat/{{ chamado.id }}" target="_blank" class="sua-classe-css-aqui">Baixar PDF</a>
-                            <form action="/chamado/{{ chamado.id }}/excluir" method="POST" style="margin:0;" onsubmit="return confirm('Tem certeza que deseja excluir permanentemente o registro e o PDF deste chamado finalizado?');">
+                       <div style="display: flex; gap: 8px;">
+                               <a href="/baixar_rat/{{ chamado.id }}" target="_blank" class="btn-acao">Baixar PDF</a>
+    
+                                <form action="/chamado/{{ chamado.id }}/excluir" method="POST" style="margin:0;" onsubmit="return confirm('Tem certeza que deseja excluir?');">
                                 <button type="submit" class="btn-excluir">Deletar</button>
-                            </form>
-                        </div>
+                </form>
+                  </div>
                     </td>
                 </tr>
                 {% endfor %}
