@@ -118,6 +118,30 @@ def rat_chamado(id):
         
     return render_template('rat.html', chamado=chamado)
 
+# --- NOVA ROTA ADICIONADA AQUI ---
+@app.route('/chamado/<int:id>/finalizar', methods=['POST'])
+def finalizar_chamado_rat(id):
+    if not session.get('logado'): return redirect(url_for('login'))
+    
+    # Se a página RAT enviar o PDF preenchido, salvamos na pasta RATs_Gerados
+    if 'pdf' in request.files:
+        arquivo_pdf = request.files['pdf']
+        diretorio = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'RATs_Gerados')
+        os.makedirs(diretorio, exist_ok=True)
+        # Salva com o ID do chamado para fácil identificação
+        arquivo_pdf.save(os.path.join(diretorio, f'RAT_OS_{id}.pdf'))
+        
+    # Atualiza o banco de dados mudando o status para 'Finalizado'
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE chamados SET status = 'Finalizado' WHERE id = %s", (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return "Chamado finalizado e RAT salva com sucesso!", 200
+# ---------------------------------
+
 @app.route('/chamado/<int:id>/excluir', methods=['POST'])
 def excluir_chamado(id):
     if not session.get('logado'): return redirect(url_for('login'))
