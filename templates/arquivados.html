@@ -90,7 +90,7 @@
                     <td>{{ chamado.data_abertura }}</td>
                     <td>
                         <div style="display: flex; gap: 8px;">
-                            <a href="/chamado/{{ chamado.id }}/rat" class="btn-download">📥 Baixar RAT (PDF)</a>
+                            <a href="/baixar_rat/{{ chamado.id }}" target="_blank" class="sua-classe-css-aqui">Baixar PDF</a>
                             <form action="/chamado/{{ chamado.id }}/excluir" method="POST" style="margin:0;" onsubmit="return confirm('Tem certeza que deseja excluir permanentemente o registro e o PDF deste chamado finalizado?');">
                                 <button type="submit" class="btn-excluir">Deletar</button>
                             </form>
