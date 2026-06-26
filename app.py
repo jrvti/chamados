@@ -3,7 +3,7 @@ import random
 import string
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Flask, render_template, request, send_file, redirect, url_for, session
+from flask import Flask, render_template, request, send_file, redirect, url_for, session, jsonify
 
 app = Flask(__name__)
 app.secret_key = 'chave_secreta_jrvti_2026'
@@ -35,7 +35,6 @@ def enviar_chamado():
     
     descricao_final = f"Equipamento: {marca} / {modelo} | Problema: {descricao}"
     
-    # Geramos o código da OS e salvamos em uma variável antes do insert
     codigo_gerado = gerar_codigo_os()
     
     conn = get_db_connection()
@@ -48,7 +47,6 @@ def enviar_chamado():
     cur.close()
     conn.close()
     
-    # Enviamos o código gerado para ser exibido no sucesso.html
     return render_template('sucesso.html', codigo_os=codigo_gerado)
     
 @app.route('/login', methods=['GET', 'POST'])
@@ -118,20 +116,16 @@ def rat_chamado(id):
         
     return render_template('rat.html', chamado=chamado)
 
-# --- NOVA ROTA ADICIONADA AQUI ---
 @app.route('/chamado/<int:id>/finalizar', methods=['POST'])
 def finalizar_chamado_rat(id):
-    if not session.get('logado'): return redirect(url_for('login'))
+    if not session.get('logado'): return jsonify({"erro": "Não autorizado"}), 401
     
-    # Se a página RAT enviar o PDF preenchido, salvamos na pasta RATs_Gerados
     if 'pdf' in request.files:
         arquivo_pdf = request.files['pdf']
         diretorio = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'RATs_Gerados')
         os.makedirs(diretorio, exist_ok=True)
-        # Salva com o ID do chamado para fácil identificação
         arquivo_pdf.save(os.path.join(diretorio, f'RAT_OS_{id}.pdf'))
         
-    # Atualiza o banco de dados mudando o status para 'Finalizado'
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("UPDATE chamados SET status = 'Finalizado' WHERE id = %s", (id,))
@@ -139,8 +133,23 @@ def finalizar_chamado_rat(id):
     cur.close()
     conn.close()
     
-    return "Chamado finalizado e RAT salva com sucesso!", 200
-# ---------------------------------
+    # Resposta em JSON para o JavaScript não dar erro de comunicação
+    return jsonify({"sucesso": True, "mensagem": "Chamado finalizado e RAT salva!"}), 200
+
+# --- NOVA ROTA PARA BAIXAR O PDF DA RAT ---
+@app.route('/baixar_rat/<int:id>')
+def baixar_rat(id):
+    if not session.get('logado'): return redirect(url_for('login'))
+    
+    diretorio = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'RATs_Gerados')
+    caminho_arquivo = os.path.join(diretorio, f'RAT_OS_{id}.pdf')
+    
+    if os.path.exists(caminho_arquivo):
+        # as_attachment=True força o navegador a fazer o download em vez de abrir
+        return send_file(caminho_arquivo, as_attachment=True, download_name=f'RAT_OS_{id}.pdf')
+    else:
+        return "Arquivo PDF não encontrado para esta OS. Talvez a RAT não tenha sido gerada.", 404
+# ------------------------------------------
 
 @app.route('/chamado/<int:id>/excluir', methods=['POST'])
 def excluir_chamado(id):
