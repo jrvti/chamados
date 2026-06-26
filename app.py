@@ -157,6 +157,25 @@ def modelo_rat():
     if os.path.exists(caminho_arquivo):
         return send_file(caminho_arquivo, mimetype='application/pdf')
     return "Arquivo não encontrado", 404
+
+@app.route('/dashboard')
+def dashboard():
+    if not session.get('logado'): return redirect(url_for('login'))
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT COUNT(*) as total FROM chamados WHERE status != 'Finalizado'")
+    total_ativos = cur.fetchone()['total']
+    cur.execute("SELECT COUNT(*) as total FROM chamados WHERE status = 'Finalizado'")
+    total_fechados = cur.fetchone()['total']
+    cur.execute("SELECT COUNT(*) as total FROM chamados WHERE status != 'Finalizado' AND urgencia IN ('Alta', 'Crítica')")
+    total_criticos = cur.fetchone()['total']
+    cur.execute("SELECT tecnico_responsavel, COUNT(*) as qtd FROM chamados WHERE status = 'Finalizado' GROUP BY tecnico_responsavel ORDER BY qtd DESC")
+    ranking_tecnicos = cur.fetchall()
+    cur.execute("SELECT empresa, COUNT(*) as qtd FROM chamados GROUP BY empresa ORDER BY qtd DESC LIMIT 3")
+    top_clientes = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('dashboard.html', total_ativos=total_ativos, total_fechados=total_fechados, total_criticos=total_criticos, ranking_tecnicos=ranking_tecnicos, top_clientes=top_clientes)
         
 if __name__ == '__main__':
     app.run()
