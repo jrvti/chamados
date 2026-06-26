@@ -35,18 +35,21 @@ def enviar_chamado():
     
     descricao_final = f"Equipamento: {marca} / {modelo} | Problema: {descricao}"
     
+    # Geramos o código da OS e salvamos em uma variável antes do insert
+    codigo_gerado = gerar_codigo_os()
+    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('''
         INSERT INTO chamados (codigo_os, cliente, empresa, whatsapp, descricao, urgencia)
         VALUES (%s, %s, %s, %s, %s, %s)
-    ''', (gerar_codigo_os(), cliente, empresa, whatsapp, descricao_final, 'Média'))
+    ''', (codigo_gerado, cliente, empresa, whatsapp, descricao_final, 'Média'))
     conn.commit()
     cur.close()
     conn.close()
     
-    # Agora ele renderiza a tela bonita
-    return render_template('sucesso.html')
+    # Enviamos o código gerado para ser exibido no sucesso.html
+    return render_template('sucesso.html', codigo_os=codigo_gerado)
     
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -100,6 +103,21 @@ def rat_avulsa():
     if not session.get('logado'): return redirect(url_for('login'))
     return render_template('rat.html', chamado={"id": 0, "codigo_os": gerar_codigo_os()})
 
+@app.route('/chamado/<int:id>/rat')
+def rat_chamado(id):
+    if not session.get('logado'): return redirect(url_for('login'))
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM chamados WHERE id = %s", (id,))
+    chamado = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if not chamado:
+        return "Chamado não encontrado", 404
+        
+    return render_template('rat.html', chamado=chamado)
+
 @app.route('/chamado/<int:id>/excluir', methods=['POST'])
 def excluir_chamado(id):
     if not session.get('logado'): return redirect(url_for('login'))
@@ -111,7 +129,7 @@ def excluir_chamado(id):
     conn.close()
     return redirect(url_for('admin'))
 
-@app.route('/modelo_base_pdf') # Mudei aqui para coincidir com o erro do console
+@app.route('/modelo_base_pdf')
 def modelo_rat():
     diretorio_base = os.path.dirname(os.path.abspath(__file__))
     caminho_arquivo = os.path.join(diretorio_base, 'modelo_rat.pdf')
