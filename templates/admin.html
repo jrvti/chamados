@@ -115,7 +115,9 @@
                 {% endif %}
                 {% for chamado in chamados %}
                 <tr>
-                    <td><a href="/chamado/{{ chamado.id }}/detalhes" class="link-os">{{ chamado.codigo_os }}</a></td>
+                   <td>
+    <a href="/chamado/{{ chamado.id }}" class="link-os">{{ chamado.codigo_os }}</a>
+</td>
                     <td><strong>{{ chamado.cliente }}</strong><br><span style="color: var(--texto-secundario);">{{ chamado.empresa }}</span></td>
                     <td>{{ chamado.whatsapp }}</td>
                     <td>{{ chamado.descricao[:40] }}...</td>
