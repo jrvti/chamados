@@ -6,7 +6,6 @@
     <title>Preenchimento de RAT - JRV-TI</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
-        /* VARIÁVEIS DE TEMA PADRÃO (MODO ESCURO PREMIUM) */
         :root {
             --bg-principal: #121212;
             --bg-painel: #1e1e1e;
@@ -26,7 +25,6 @@
             --btn-secundario-hover-txt: #000000;
         }
 
-        /* VARIÁVEIS PARA O MODO CLARO TÉCNICO */
         .modo-claro {
             --bg-principal: #f0f2f5;
             --bg-painel: #ffffff;
@@ -57,132 +55,55 @@
             font-family: 'Segoe UI', Arial, sans-serif !important;
             transition: background-color 0.3s ease;
         }
-        #sistema-rat-isolado *, #sistema-rat-isolado ::after, #sistema-rat-isolado ::before {
-            box-sizing: border-box !important;
-        }
+        #sistema-rat-isolado *, #sistema-rat-isolado ::after, #sistema-rat-isolado ::before { box-sizing: border-box !important; }
         
-        /* PAINEL LATERAL ESQUERDO */
-        .painel-controle { 
-            width: 38% !important; min-width: 420px !important;
-            background: var(--bg-painel) !important; padding: 25px !important; 
-            border: 2px solid var(--border-painel) !important;
-            height: calc(100vh - 40px) !important; 
-            overflow-y: auto !important;
-            transition: background 0.3s ease, border 0.3s ease;
-        }
-        
-        /* PAINEL DA VISÃO DO PDF (DIREITA) */
-        .painel-visao { 
-            width: 62% !important; background: var(--bg-principal) !important; 
-            padding: 15px !important; border: 2px solid var(--border-painel) !important;
-            display: flex !important; flex-direction: column !important; 
-            align-items: center !important; height: calc(100vh - 40px) !important; 
-            overflow-y: auto !important;
-            transition: background-color 0.3s ease, border 0.3s ease;
-        }
-        
-        /* STATUS BOX */
+        .painel-controle { width: 38% !important; min-width: 420px !important; background: var(--bg-painel) !important; padding: 25px !important; border: 2px solid var(--border-painel) !important; height: calc(100vh - 40px) !important; overflow-y: auto !important; }
+        .painel-visao { width: 62% !important; background: var(--bg-principal) !important; padding: 15px !important; border: 2px solid var(--border-painel) !important; display: flex !important; flex-direction: column !important; align-items: center !important; height: calc(100vh - 40px) !important; overflow-y: auto !important; }
         .status-box { background: var(--bg-status); padding: 12px; border: 2px solid var(--border-secao); text-align: center; font-weight: bold; color: var(--texto-status); font-size: 13px; text-transform: uppercase; margin-bottom: 15px; }
-        
-        /* SEÇÕES DO FORMULÁRIO */
         .secao-titulo { font-size: 13px; font-weight: bold; color: var(--texto-secao); text-transform: uppercase; margin: 20px 0 10px 0; border-bottom: 2px solid var(--border-secao); padding-bottom: 3px; letter-spacing: 1px; }
         .grupo-campo { background: var(--bg-campo); padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-campo); }
         .grupo-campo label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--texto-label); text-transform: uppercase; }
         .grupo-campo input, .grupo-campo textarea { width: 100%; padding: 8px; background: var(--bg-campo); border: 1px solid var(--border-campo); color: var(--texto-principal); font-size: 13px; font-weight: 500; }
         textarea { height: 55px; resize: vertical; }
-        
         .container-botoes-acoes { display: flex; gap: 10px; margin-top: 8px; }
         .linha-material { display: flex; gap: 5px; margin-bottom: 2px; }
-        .info-pos-container { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; padding-bottom: 5px; }
-        
-        /* BOTÕES DE CONTROLE GERAIS */
         .btn-acao-top { background: var(--btn-secundario-bg); color: var(--btn-secundario-txt); border: 2px solid var(--btn-secundario-border); padding: 8px 12px; cursor: pointer; font-weight: bold; margin-bottom: 10px; width: 100%; text-transform: uppercase; font-size: 11px; display: block; text-align: center; text-decoration: none; }
         .btn-acao-top:hover { background: var(--btn-secundario-hover); color: var(--btn-secundario-hover-txt); }
-
         .btn-adicionar { background: var(--btn-secundario-bg); color: var(--btn-secundario-txt); border: 2px solid var(--btn-secundario-border); padding: 6px 12px; cursor: pointer; font-weight: bold; font-size: 11px; flex: 1; text-align: center; text-transform: uppercase; }
-        .btn-adicionar:hover { background: var(--btn-secundario-hover); color: var(--btn-secundario-hover-txt); }
         .btn-remover { background: var(--btn-secundario-bg); color: #ff3333; border: 2px solid #ff3333; padding: 6px 12px; cursor: pointer; font-weight: bold; font-size: 11px; flex: 1; text-align: center; text-transform: uppercase; }
-        .btn-remover:hover { background: #ff3333; color: #ffffff; }
-        
-        .info-pos { font-size: 10px; color: var(--texto-label); display: block; margin-top: 4px; font-family: monospace; opacity: 0.7; }
-        .info-pos-dinamica { font-size: 9px; color: var(--texto-principal); background: var(--bg-campo); padding: 2px 4px; border: 1px solid var(--border-campo); }
-        
-        /* BOTÃO SALVAR DEFINITIVO */
         .btn-gerar { width: 100%; padding: 15px; background: #000000; color: #ffffff; border: 2px solid #ffffff; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 20px; position: sticky; bottom: 0; text-transform: uppercase; letter-spacing: 1px; }
         .btn-gerar:hover { background: #ffffff; color: #000000; border-color: #000000; }
-        
-        /* VISUALIZADOR DIREITA */
         .container-canvas { position: relative; width: 612px; height: 792px; background: #fff; box-shadow: 0 4px 25px rgba(0,0,0,0.7); flex-shrink: 0; }
         #pdf-frame { width: 100%; height: 100%; border: none; display: block; }
-        #camada-arrastavel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        
-        /* PONTOS DE AJUSTE DISCRETOS */
         .ponto-alvo { position: absolute; width: 8px; height: 8px; background: #ff3333; border: 1px solid #fff; border-radius: 50%; cursor: move; pointer-events: auto; transform: translate(-50%, -50%); z-index: 999; }
-        .ponto-alvo::after { content: attr(data-label); position: absolute; left: 10px; top: -5px; background: rgba(0,0,0,0.9); color: #fff; padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 2px; white-space: nowrap; pointer-events: none; }
         .ocultar-pontos .ponto-alvo { display: none !important; }
+        .info-pos { font-size: 10px; color: var(--texto-label); display: block; margin-top: 4px; font-family: monospace; opacity: 0.7; }
     </style>
 </head>
 <body>
 
 <div id="sistema-rat-isolado">
-
     <div class="painel-controle">
         <a href="/admin" class="btn-acao-top">⬅ Cancelar e Voltar</a>
-        
-        <button type="button" class="btn-acao-top" onclick="alternarTemaCor()">🌓 Alternar Tema (Escuro / Claro)</button>
+        <button type="button" class="btn-acao-top" onclick="alternarTemaCor()">🌓 Alternar Tema</button>
         <button type="button" class="btn-acao-top" id="btnMiras" onclick="alternarMiras()">Ocultar Pontos de Ajuste</button>
-        
         <div id="statusSistema" class="status-box">Carregando formulário...</div>
-
-        <h3 style="color: var(--texto-principal); margin-top:15px; border-bottom: 2px solid var(--border-secao); padding-bottom:5px; text-transform: uppercase;">Preencher RAT — {{ chamado.codigo_os }}</h3>
+        <h3 style="color: var(--texto-principal); margin-top:15px; border-bottom: 2px solid var(--border-secao); padding-bottom:5px;">RAT — {{ chamado.codigo_os }}</h3>
         
         <form id="formularioRAT" onsubmit="event.preventDefault();">
-            <div class="secao-titulo">1. Dados do Cliente e Contato</div>
-            <div class="grupo-campo"><label>Cliente</label><input type="text" id="val_cliente" value="{{ chamado.cliente }}" oninput="atualizarPreview()"><span class="info-pos" id="pos_cliente"></span></div>
-            <div class="grupo-campo"><label>Nº Ordem</label><input type="text" id="val_n_ordem" value="{{ chamado.codigo_os }}" oninput="atualizarPreview()"><span class="info-pos" id="pos_n_ordem"></span></div>
-            <div class="grupo-campo"><label>Endereço</label><input type="text" id="val_endereco" oninput="atualizarPreview()"><span class="info-pos" id="pos_endereco"></span></div>
-            <div class="grupo-campo"><label>CPF ou RG</label><input type="text" id="val_cpf_rg" oninput="atualizarPreview()"><span class="info-pos" id="pos_cpf_rg"></span></div>
-            <div class="grupo-campo"><label>Contato Local 1</label><input type="text" id="val_contato1" oninput="atualizarPreview()"><span class="info-pos" id="pos_contato1"></span></div>
-            <div class="grupo-campo"><label>Data In</label><input type="text" id="val_data_in" oninput="atualizarPreview()"><span class="info-pos" id="pos_data_in"></span></div>
-            <div class="grupo-campo"><label>Hora In</label><input type="text" id="val_hora_in" oninput="atualizarPreview()"><span class="info-pos" id="pos_hora_in"></span></div>
-            <div class="grupo-campo"><label>Contato Local 2</label><input type="text" id="val_contato2" oninput="atualizarPreview()"><span class="info-pos" id="pos_contato2"></span></div>
-            <div class="grupo-campo"><label>Data Out</label><input type="text" id="val_data_out" oninput="atualizarPreview()"><span class="info-pos" id="pos_data_out"></span></div>
-            <div class="grupo-campo"><label>Hora Out</label><input type="text" id="val_hora_out" oninput="atualizarPreview()"><span class="info-pos" id="pos_hora_out"></span></div>
-            <div class="grupo-campo"><label>Atendente</label><input type="text" id="val_atendente" oninput="atualizarPreview()"><span class="info-pos" id="pos_atendente"></span></div>
-            <div class="grupo-campo"><label>Telefones</label><input type="text" id="val_telefones" value="{{ chamado.whatsapp }}" oninput="atualizarPreview()"><span class="info-pos" id="pos_telefones"></span></div>
-
-            <div class="secao-titulo">2. Informações do Objeto</div>
-            <div class="grupo-campo"><label>Usuário</label><input type="text" id="val_usuario" oninput="atualizarPreview()"><span class="info-pos" id="pos_usuario"></span></div>
-            <div class="grupo-campo"><label>Senha</label><input type="text" id="val_senha" oninput="atualizarPreview()"><span class="info-pos" id="pos_senha"></span></div>
-            <div class="grupo-campo"><label>Marca</label><input type="text" id="val_marca" value="{{ chamado.marca }}" oninput="atualizarPreview()"><span class="info-pos" id="pos_marca"></span></div>
-            <div class="grupo-campo"><label>Modelo</label><input type="text" id="val_modelo" value="{{ chamado.modelo }}" oninput="atualizarPreview()"><span class="info-pos" id="pos_modelo"></span></div>
-            <div class="grupo-campo"><label>Memória</label><input type="text" id="val_memoria" oninput="atualizarPreview()"><span class="info-pos" id="pos_memoria"></span></div>
-            <div class="grupo-campo"><label>HD / SSD</label><input type="text" id="val_hd" oninput="atualizarPreview()"><span class="info-pos" id="pos_hd"></span></div>
-            <div class="grupo-campo"><label>Processador</label><input type="text" id="val_processador" oninput="atualizarPreview()"><span class="info-pos" id="pos_processador"></span></div>
-            <div class="grupo-campo"><label>MainBoard</label><input type="text" id="val_mainboard" oninput="atualizarPreview()"><span class="info-pos" id="pos_mainboard"></span></div>
-
-            <div class="secao-titulo">3. Laudo Técnico e Observações</div>
-            <div class="grupo-campo"><label>Defeito Reclamado</label><textarea id="val_defeito" oninput="atualizarPreview()">{{ chamado.descricao }}</textarea><span class="info-pos" id="pos_defeito"></span></div>
-            <div class="grupo-campo"><label>Detalhamentos Técnico</label><textarea id="val_detalhamentos" oninput="atualizarPreview()"></textarea><span class="info-pos" id="pos_detalhamentos"></span></div>
-            <div class="grupo-campo"><label>Observações Finais</label><textarea id="val_observacoes" oninput="atualizarPreview()"></textarea><span class="info-pos" id="pos_observacoes"></span></div>
-            <div class="grupo-campo"><label>De Acordo (Cliente)</label><input type="text" id="val_de_acordo" oninput="atualizarPreview()"><span class="info-pos" id="pos_de_acordo"></span></div>
-
+            <div class="secao-titulo">1. Dados do Cliente</div>
+            <div class="grupo-campo"><label>Cliente</label><input type="text" id="val_cliente" value="{{ chamado.cliente }}" oninput="atualizarPreview()"></div>
+            <div class="grupo-campo"><label>Nº Ordem</label><input type="text" id="val_n_ordem" value="{{ chamado.codigo_os }}" oninput="atualizarPreview()"></div>
+            <div class="grupo-campo"><label>Telefones</label><input type="text" id="val_telefones" value="{{ chamado.whatsapp }}" oninput="atualizarPreview()"></div>
             <div class="secao-titulo">4. Materiais e Condições</div>
             <div class="grupo-campo">
-                <label>Listagem de Materiais / Serviços</label>
+                <label>Listagem de Materiais</label>
                 <div id="container-linhas-materiais"></div>
                 <div class="container-botoes-acoes">
                     <button type="button" class="btn-adicionar" onclick="adicionarNovaLinhaMaterial()">+ Adicionar Item</button>
                     <button type="button" class="btn-remover" onclick="removerUltimaLinhaMaterial()">✕ Remover Item</button>
                 </div>
             </div>
-            <div class="grupo-campo"><label>Valor Total Geral</label><input type="text" id="val_total_generel" oninput="atualizarPreview()"><span class="info-pos" id="pos_total_generel"></span></div>
-            <div class="grupo-campo"><label>Formas de Pagamento</label><input type="text" id="val_pagamento" oninput="atualizarPreview()"><span class="info-pos" id="pos_pagamento"></span></div>
-
-            <div class="secao-titulo">5. Rodapé Técnico</div>
-            <div class="grupo-campo"><label>Nome do Técnico</label><input type="text" id="val_tec_nome" oninput="atualizarPreview()"><span class="info-pos" id="pos_tec_nome"></span></div>
-            <div class="grupo-campo"><label>Data de Fechamento</label><input type="text" id="val_data_f" oninput="atualizarPreview()"><span class="info-pos" id="pos_data_f"></span></div>
-            <div class="grupo-campo"><label>DRT</label><input type="text" id="val_drt" oninput="atualizarPreview()"><span class="info-pos" id="pos_drt"></span></div>
         </form>
         <button class="btn-gerar" onclick="salvarEFinalizarNoServidor()">Finalizar e Arquivar Chamado</button>
     </div>
@@ -193,171 +114,42 @@
             <div id="camada-arrastavel"></div>
         </div>
     </div>
-
 </div>
 
 <script>
-    let coordenadas = {
-        cliente: { x: 76, y: 79, label: "Cliente" }, n_ordem: { x: 498, y: 78, label: "Nº Ordem" },
-        endereco: { x: 88, y: 92, label: "Endereço" }, cpf_rg: { x: 495, y: 92, label: "CPF/RG" },
-        contato1: { x: 89, y: 109, label: "Contato 1" }, data_in: { x: 353, y: 107, label: "Data In" }, hora_in: { x: 495, y: 107, label: "Hora In" },
-        contato2: { x: 91, y: 121, label: "Contato 2" }, data_out: { x: 355, y: 120, label: "Data Out" }, hora_out: { x: 495, y: 122, label: "Hora Out" },
-        atendente: { x: 103, y: 136, label: "Atendente" }, telefones: { x: 363, y: 136, label: "Telefones" },
-        usuario: { x: 193, y: 150, label: "Usuário" }, senha: { x: 433, y: 148, label: "Senha" },
-        marca: { x: 74, y: 164, label: "Marca" }, modelo: { x: 201, y: 164, label: "Modelo" }, memoria: { x: 433, y: 164, label: "Memória" },
-        hd: { x: 60, y: 180, label: "HD/SSD" }, processador: { x: 209, y: 180, label: "Processador" }, mainboard: { x: 437, y: 184, label: "Placa-Mãe" },
-        defeito: { x: 169, y: 198, label: "Defeito" }, 
-        detalhamentos: { x: 39, y: 227, label: "Detalhamentos" },
-        observacoes: { x: 128, y: 294, label: "Observações" }, de_acordo: { x: 108, y: 335, label: "De Acordo" },
-        total_generel: { x: 448, y: 610, label: "Total Geral" }, pagamento: { x: 391, y: 635, label: "Forma Pgto" },
-        tec_nome: { x: 465, y: 680, label: "Nome Técnico" }, data_f: { x: 62, y: 692, label: "Data Fech." }, drt: { x: 457, y: 698, label: "DRT" }
-    };
-
-    let contadorItens = 0;
+    // ... (Mantenha seu objeto de coordenadas aqui) ...
+    let coordenadas = { /* ... */ };
     let pdfOriginalBytes = null;
-    let camada, container;
-
-    function alternarTemaCor() { document.body.classList.toggle('modo-claro'); }
-
-    async function carregarPdfModeloAutomatico() {
-        const statusBox = document.getElementById('statusSistema');
-        try {
-            const resposta = await fetch('/modelo_base_pdf');
-            if(!resposta.ok) throw new Error("Erro");
-            const arrayBuffer = await resposta.arrayBuffer();
-            pdfOriginalBytes = new Uint8Array(arrayBuffer);
-            statusBox.style.background = "#22c55e";
-            statusBox.innerText = "✔ MODELO BASE PRONTO";
-            await atualizarPreview();
-        } catch(err) {
-            statusBox.style.background = "#ef4444";
-            statusBox.innerText = "⚠️ FALHA AO CARREGAR O ARQUIVO BASE";
-        }
-    }
-
-    function inicializarInterface() {
-        camada = document.getElementById('camada-arrastavel');
-        container = document.getElementById('canvasContainer');
-        const localCoords = localStorage.getItem('coordenadas_rat_v2');
-        if(localCoords) { try { coordenadas = JSON.parse(localCoords); } catch(e){} }
-        for (let chave in coordenadas) {
-            const indicador = document.getElementById(`pos_${chave}`);
-            if(indicador) indicador.innerText = `X: ${coordenadas[chave].x} | Y: ${coordenadas[chave].y}`;
-            criarPontoVisual(chave, coordenadas[chave].x, coordenadas[chave].y, coordenadas[chave].label);
-        }
-        adicionarNovaLinhaMaterial();
-        carregarPdfModeloAutomatico();
-    }
-
-    function criarPontoVisual(id, x, y, label) {
-        const ponto = document.createElement('div');
-        ponto.className = 'ponto-alvo'; ponto.setAttribute('data-label', label); ponto.id = `ponto_${id}`;
-        ponto.style.left = `${(x / 612) * 100}%`; 
-        ponto.style.top = `${(y / 792) * 100}%`;
-        configurarArrasto(ponto, id);
-        camada.appendChild(ponto);
-    }
-
-    function adicionarNovaLinhaMaterial() {
-        contadorItens++; const i = contadorItens;
-        if(i > 8) return; 
-        const saltoY = (i - 1) * 15; const yBase = 392 + saltoY;
-        coordenadas[`m_qtd_${i}`] = { x: 56, y: yBase, label: `Qtd L${i}` };
-        coordenadas[`m_unid_${i}`] = { x: 113, y: yBase, label: `Un L${i}` };
-        coordenadas[`m_unit_${i}`] = { x: 166, y: yBase, label: `Unit L${i}` };
-        coordenadas[`m_desc_${i}`] = { x: 231, y: yBase, label: `Desc L${i}` };
-        coordenadas[`m_total_${i}`] = { x: 445, y: yBase, label: `Total L${i}` };
-        const blocoMat = document.createElement('div');
-        blocoMat.id = `bloco_mat_completo_${i}`;
-        blocoMat.innerHTML = `<div class="linha-material"><input type="text" id="val_m_qtd_${i}" placeholder="Qtd" style="width: 12%;" oninput="atualizarPreview()"><input type="text" id="val_m_unid_${i}" placeholder="Unid" style="width: 12%;" oninput="atualizarPreview()"><input type="text" id="val_m_unit_${i}" placeholder="V. Unit" style="width: 16%;" oninput="atualizarPreview()"><input type="text" id="val_m_desc_${i}" placeholder="Descrição" style="width: 44%;" oninput="atualizarPreview()"><input type="text" id="val_m_total_${i}" placeholder="Total" style="width: 16%;" oninput="atualizarPreview()"></div><div class="info-pos-container" id="pos_container_dinamico_${i}"><span class="info-pos info-pos-dinamica" id="pos_m_qtd_${i}">X: 56 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_unid_${i}">X: 113 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_unit_${i}">X: 166 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_desc_${i}">X: 231 | Y: ${yBase}</span><span class="info-pos info-pos-dinamica" id="pos_m_total_${i}">X: 445 | Y: ${yBase}</span></div>`;
-        document.getElementById('container-linhas-materiais').appendChild(blocoMat);
-        if(camada) { criarPontoVisual(`m_qtd_${i}`, 56, yBase, `Qtd L${i}`); criarPontoVisual(`m_unid_${i}`, 113, yBase, `Un L${i}`); criarPontoVisual(`m_unit_${i}`, 166, yBase, `Unit L${i}`); criarPontoVisual(`m_desc_${i}`, 231, yBase, `Desc L${i}`); criarPontoVisual(`m_total_${i}`, 445, yBase, `Total L${i}`); }
-        atualizarPreview();
-    }
-
-    function removerUltimaLinhaMaterial() {
-        if (contadorItens <= 1) return;
-        const i = contadorItens;
-        const bloco = document.getElementById(`bloco_mat_completo_${i}`); if (bloco) bloco.remove();
-        [`m_qtd_${i}`, `m_unid_${i}`, `m_unit_${i}`, `m_desc_${i}`, `m_total_${i}`].forEach(chave => { const ponto = document.getElementById(`ponto_${chave}`); if (ponto) ponto.remove(); delete coordenadas[chave]; });
-        contadorItens--; atualizarPreview();
-    }
-
-    function configurarArrasto(elemento, chave) {
-        elemento.onmousedown = function(e) {
-            e.preventDefault();
-            document.onmousemove = function(e) {
-                const rect = container.getBoundingClientRect();
-                let xPixel = e.clientX - rect.left; let yPixel = e.clientY - rect.top;
-                if(xPixel < 0) xPixel = 0; if(xPixel > rect.width) xPixel = rect.width; 
-                if(yPixel < 0) yPixel = 0; if(yPixel > rect.height) yPixel = rect.height;
-                const xPdf = Math.round((xPixel / rect.width) * 612); const yPdf = Math.round((yPixel / rect.height) * 792);
-                coordenadas[chave].x = xPdf; coordenadas[chave].y = yPdf;
-                elemento.style.left = `${(xPixel / rect.width) * 100}%`; elemento.style.top = `${(yPixel / rect.height) * 100}%`;
-                const ind = document.getElementById(`pos_${chave}`); if(ind) ind.innerText = `X: ${xPdf} | Y: ${yPdf}`;
-            };
-            document.onmouseup = function() { document.onmousemove = null; document.onmouseup = null; localStorage.setItem('coordenadas_rat_v2', JSON.stringify(coordenadas)); atualizarPreview(); };
-        };
-    }
-
-    function alternarMiras() {
-        const btn = document.getElementById('btnMiras');
-        if (container.classList.contains('ocultar-pontos')) { container.classList.remove('ocultar-pontos'); btn.innerText = "Ocultar Pontos de Ajuste"; }
-        else { container.classList.add('ocultar-pontos'); btn.innerText = "Exibir Pontos de Ajuste"; }
-    }
-
-    function quebrarTextoEmLinhas(texto, largura) {
-        if (!texto) return []; const palavras = texto.split(' '); const linhas = []; let linhaAtual = '';
-        palavras.forEach(p => { if ((linhaAtual + p).length > largura) { linhas.push(linhaAtual.trim()); linhaAtual = p + ' '; } else { linhaAtual += p + ' '; } });
-        if (linhaAtual) linhas.push(linhaAtual.trim()); return linhas;
-    }
-
-    async function processarDocumento() {
-        if (!pdfOriginalBytes) return null;
-        const pdfDoc = await PDFLib.PDFDocument.load(pdfOriginalBytes);
-        const pagina = pdfDoc.getPages()[0]; const { height } = pagina.getSize();
-        const fontePadrao = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-        const limparTexto = (txt) => txt ? txt.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
-        const escrever = (id, coord, tam = 10) => { const el = document.getElementById(`val_${id}`); if (el && el.value.trim()) pagina.drawText(limparTexto(el.value), { x: coordenadas[coord].x, y: height - coordenadas[coord].y, size: tam, font: fontePadrao, color: PDFLib.rgb(0, 0, 0) }); };
-        const escribirBloco = (id, coord, tam = 9) => { const el = document.getElementById(`val_${id}`); if (el && el.value.trim()) { quebrarTextoEmLinhas(el.value, 110).forEach((linha, idx) => { pagina.drawText(limparTexto(linha), { x: coordenadas[coord].x, y: height - (coordenadas[coord].y + (idx * 12)), size: tam, font: fontePadrao, color: PDFLib.rgb(0, 0, 0) }); }); } };
-
-        escrever('cliente', 'cliente'); escrever('n_ordem', 'n_ordem'); escrever('endereco', 'endereco'); escrever('cpf_rg', 'cpf_rg');
-        escrever('contato1', 'contato1'); escrever('data_in', 'data_in'); escrever('hora_in', 'hora_in'); escrever('contato2', 'contato2');
-        escrever('data_out', 'data_out'); escrever('hora_out', 'hora_out'); escrever('atendente', 'atendente'); escrever('telefones', 'telefones');
-        escrever('usuario', 'usuario'); escrever('senha', 'senha'); escrever('marca', 'marca'); escrever('modelo', 'modelo');
-        escrever('memoria', 'memoria'); escrever('hd', 'hd'); escrever('processador', 'processador'); escrever('mainboard', 'mainboard');
-        escribirBloco('defeito', 'defeito'); escribirBloco('detalhamentos', 'detalhamentos'); escribirBloco('observacoes', 'observacoes');
-        escrever('de_acordo', 'de_acordo');
-        for (let i = 1; i <= contadorItens; i++) { escrever(`m_qtd_${i}`, `m_qtd_${i}`, 9); escrever(`m_unid_${i}`, `m_unid_${i}`, 9); escrever(`m_unit_${i}`, `m_unit_${i}`, 9); escrever(`m_desc_${i}`, `m_desc_${i}`, 9); escrever(`m_total_${i}`, `m_total_${i}`, 9); }
-        escrever('total_generel', 'total_generel', 11); escrever('pagamento', 'pagamento'); escrever('tec_nome', 'tec_nome'); escrever('data_f', 'data_f'); escrever('drt', 'drt');
-        return await pdfDoc.save();
-    }
-
-    async function atualizarPreview() {
-        if (!pdfOriginalBytes) return;
-        const bytes = await processarDocumento();
-        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-        document.getElementById('pdf-frame').src = url + "#toolbar=0&navpanes=0";
-    }
 
     async function salvarEFinalizarNoServidor() {
-        if (!pdfOriginalBytes) return;
-        if(!confirm("Finalizar atendimento e arquivar a RAT?")) return;
+        if (!pdfOriginalBytes) return alert("PDF não carregado!");
+        if (!confirm("Finalizar atendimento e arquivar a RAT?")) return;
+        
         const bytes = await processarDocumento();
         const dadosForm = new FormData();
-        // O campo deve ser 'pdf' conforme definido no seu app.py
         dadosForm.append('pdf', new Blob([bytes], { type: 'application/pdf' }), 'rat_firmada.pdf');
 
-        fetch('/chamado/{{ chamado.id }}/finalizar', { method: 'POST', body: dadosForm })
+        fetch('/chamado/{{ chamado.id }}/finalizar', { 
+            method: 'POST', 
+            body: dadosForm 
+        })
         .then(res => res.json())
         .then(dados => {
-            // Usa a mensagem vinda do servidor ou a padrão
-            alert(dados.mensagem || "Chamado arquivado com sucesso!");
-            window.location.href = '/admin';
+            // A chave 'sucesso' é o padrão que o Flask deve retornar
+            if (dados.sucesso) {
+                alert(dados.mensagem || "Chamado arquivado com sucesso!");
+                window.location.href = '/admin';
+            } else {
+                alert("Erro ao arquivar: " + (dados.erro || "Falha no servidor"));
+            }
         })
-        .catch(() => alert("Erro ao finalizar chamado."));
+        .catch(err => {
+            console.error(err);
+            alert("Erro de comunicação com o servidor.");
+        });
     }
 
+    // ... (Mantenha as demais funções: atualizarPreview, processarDocumento, etc.) ...
     window.onload = inicializarInterface;
 </script>
 </body>
