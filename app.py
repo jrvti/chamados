@@ -26,28 +26,27 @@ def index():
 
 @app.route('/enviar_chamado', methods=['POST'])
 def enviar_chamado():
-    # Capturando todos os campos novos
     cliente = request.form.get('cliente')
     empresa = request.form.get('empresa')
     whatsapp = request.form.get('whatsapp')
-    marca = request.form.get('marca', '') # Novo
-    modelo = request.form.get('modelo', '') # Novo
+    marca = request.form.get('marca', 'Não informado')
+    modelo = request.form.get('modelo', 'Não informado')
     descricao = request.form.get('descricao')
-    urgencia = request.form.get('urgencia', 'Média')
     
-    # Criando uma descrição completa incluindo marca/modelo
-    descricao_completa = f"Equipamento: {marca} {modelo} | Detalhes: {descricao}"
+    descricao_final = f"Equipamento: {marca} / {modelo} | Problema: {descricao}"
     
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('''
         INSERT INTO chamados (codigo_os, cliente, empresa, whatsapp, descricao, urgencia)
         VALUES (%s, %s, %s, %s, %s, %s)
-    ''', (gerar_codigo_os(), cliente, empresa, whatsapp, descricao_completa, urgencia))
+    ''', (gerar_codigo_os(), cliente, empresa, whatsapp, descricao_final, 'Média'))
     conn.commit()
     cur.close()
     conn.close()
-    return "Chamado enviado com sucesso! <a href='/'>Voltar</a>"
+    
+    # Agora ele renderiza a tela bonita
+    return render_template('sucesso.html')
     
 @app.route('/login', methods=['GET', 'POST'])
 def login():
