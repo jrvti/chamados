@@ -12,7 +12,6 @@
             --bg-tabela-par: #f2f2f2;
             --border-cor: #000000;
         }
-
         [data-theme="dark"] {
             --bg-geral: #121212;
             --bg-container: #1e1e1e;
@@ -21,24 +20,19 @@
             --bg-tabela-par: #2a2a2a;
             --border-cor: #ffffff;
         }
-
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-geral); color: var(--texto-principal); padding: 30px; margin: 0; transition: background 0.2s, color 0.2s; }
         .container { max-width: 1300px; background: var(--bg-container); padding: 25px; margin: auto; border: 2px solid var(--border-cor); }
         .header-painel { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-cor); padding-bottom: 15px; margin-bottom: 20px; }
         h2 { color: var(--texto-principal); margin: 0; text-transform: uppercase; font-size: 20px; }
-        
         .btn-voltar, .btn-theme-toggle { background: var(--bg-container); color: var(--texto-principal); border: 2px solid var(--border-cor); padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 13px; text-transform: uppercase; cursor: pointer; }
         .btn-voltar:hover, .btn-theme-toggle:hover { background: var(--texto-principal); color: var(--bg-container); }
-
         .busca-container { margin-bottom: 20px; display: flex; gap: 10px; }
         .input-busca { flex: 1; padding: 10px; border: 2px solid var(--border-cor); background: var(--bg-container); color: var(--texto-principal); font-size: 14px; font-weight: bold; }
         .btn-busca { background: var(--texto-principal); color: var(--bg-container); border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; text-transform: uppercase; border: 2px solid var(--border-cor); }
-
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th, td { padding: 12px; border: 1px solid var(--border-cor); text-align: left; vertical-align: middle; }
         th { background-color: var(--texto-principal); color: var(--bg-container); font-weight: 600; text-transform: uppercase; }
         tr:nth-child(even) { background-color: var(--bg-tabela-par); }
-        
         .btn-download { background: var(--texto-principal); color: var(--bg-container); padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 12px; text-transform: uppercase; display: inline-block; border: 1px solid var(--border-cor); }
         .btn-excluir { background: var(--bg-container); color: #cc0000; border: 1px solid #cc0000; padding: 5px 10px; font-weight: bold; cursor: pointer; font-size: 12px; text-transform: uppercase; }
         .btn-excluir:hover { background: #cc0000; color: #ffffff; }
@@ -53,12 +47,10 @@
                 <a href="/admin" class="btn-voltar">Voltar ao Painel</a>
             </div>
         </div>
-
         <form method="GET" action="/arquivados" class="busca-container">
             <input type="text" name="busca" class="input-busca" placeholder="Pesquisar histórico por O.S., Cliente ou Empresa..." value="{{ busca }}">
             <button type="submit" class="btn-busca">🔍 Filtrar</button>
         </form>
-        
         <table>
             <thead>
                 <tr>
@@ -90,19 +82,17 @@
                     <td>{{ chamado.data_abertura }}</td>
                     <td>
                        <div style="display: flex; gap: 8px;">
-                               <a href="/baixar_rat/{{ chamado.id }}" target="_blank" class="btn-acao">Baixar PDF</a>
-    
-                                <form action="/chamado/{{ chamado.id }}/excluir" method="POST" style="margin:0;" onsubmit="return confirm('Tem certeza que deseja excluir?');">
+                            <a href="/baixar_rat/{{ chamado.id }}" target="_blank" class="btn-download">Baixar PDF</a>
+                            <form action="/chamado/{{ chamado.id }}/excluir" method="POST" style="margin:0;" onsubmit="return confirm('Tem certeza que deseja excluir?');">
                                 <button type="submit" class="btn-excluir">Deletar</button>
-                </form>
-                  </div>
+                            </form>
+                      </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
     <script>
         const themeToggleBtn = document.getElementById('theme-toggle');
         const currentTheme = localStorage.getItem('theme');
